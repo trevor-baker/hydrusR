@@ -17,9 +17,6 @@ write.print.times(project.path, tmin, tmax, tstep, TimeUnit, ...)
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Write print times in SELECTOR.IN
 }

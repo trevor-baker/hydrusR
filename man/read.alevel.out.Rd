@@ -23,9 +23,6 @@ read.alevel.out(
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Read outputs of ALEVEL.OUT
 }

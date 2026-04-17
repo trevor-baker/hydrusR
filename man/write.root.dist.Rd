@@ -9,9 +9,6 @@ write.root.dist(project.path, rdepth, rBeta = 0.962, ...)
 \arguments{
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Write root distribution in profile.dat
 }

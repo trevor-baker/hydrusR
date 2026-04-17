@@ -13,9 +13,6 @@ join.output.files(project.path, out.files.path = "default", ...)
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Join the output files from several H1D simulations (for longer simulation times than allowed by H1D (1000))
 }

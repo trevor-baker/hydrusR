@@ -28,9 +28,6 @@ create.soil.profile(
 
 \item{obs.nodes}{Observation nodes}
 }
-\value{
-
-}
 \description{
 Creates a new PROFILE.DAT file using a template included in the package.
 }

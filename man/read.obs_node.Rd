@@ -24,9 +24,6 @@ Other options are "h", "theta", "Flux". example, obs.output = c("h", "theta")}
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Read observation point outputs
 }

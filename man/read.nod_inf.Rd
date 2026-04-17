@@ -7,29 +7,26 @@
 read.nod_inf(
   project.path,
   out.file = "Nod_Inf.out",
-  output = NULL,
-  warn = FALSE,
+  output = c("Head", "Moisture", "K", "C", "Flux", "Sink", "Kappa", "v/KsTop", "Temp"),
+  drop.cols = FALSE,
   ...
 )
 }
 \arguments{
-\item{project.path}{Path to the H1D project}
+\item{project.path}{Path to the H1D project. Where is the out.file saved?}
 
-\item{out.file}{## Name of the Nod_Inf.out file, in case saved to different name}
+\item{out.file}{Name of the Nod_Inf.out file, in case saved to different name}
 
-\item{output}{Vector of output types to be read (e.g., "Head", "Moisture", "Flux")
-Default is NULL, meaning all the outputs is read.}
-
-\item{warn}{Should the warning of coercion of character to NA be shown}
-
-\item{...}{}
+\item{output}{Vector of output types to be read (e.g., "Head", "Moisture", "Flux"). This is only used if drop.cols = TRUE, otherwise all columns
+will be returned.}
 }
 \value{
-
+data.table of Nod_Inf.out results for all timesteps.
 }
 \description{
-READ outputs of NOD_INF.OUT
+Original from hydrusR package. Needed changes to read dual permeability outputs from Hydrus which have slightly different structure than single
+porosity files. This version should be flexible to any type.
 }
-\examples{
-
+\author{
+Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 }

@@ -9,9 +9,6 @@ write.bottom.bc(constant.bc, bc.type, bc.value, project.path, ...)
 \arguments{
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Write bottom Boundary Condition
 }

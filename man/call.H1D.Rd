@@ -16,9 +16,6 @@ output should be visible on R console (relevant only on windows)}
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Executes H1D_CALC.EXE from  Hydrus 1D directory
 }

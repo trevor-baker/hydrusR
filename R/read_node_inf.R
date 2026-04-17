@@ -1,78 +1,117 @@
 #' READ outputs of NOD_INF.OUT
 #'
-#' @param project.path Path to the H1D project
-#' @param out.file ## Name of the Nod_Inf.out file, in case saved to different name
-#' @param output Vector of output types to be read (e.g., "Head", "Moisture", "Flux")
-#' Default is NULL, meaning all the outputs is read.
-#' @param warn Should the warning of coercion of character to NA be shown
+#' Original from hydrusR package. Needed changes to read dual permeability outputs from Hydrus which have slightly different structure than single
+#' porosity files. This version should be flexible to any type.
+#' @param project.path Path to the H1D project. Where is the out.file saved?
+#' @param out.file Name of the Nod_Inf.out file, in case saved to different name
+#' @param output Vector of output types to be read (e.g., "Head", "Moisture", "Flux"). This is only used if drop.cols = TRUE, otherwise all columns
+#' will be returned.
 #' @param ...
-#'
-#' @return
+#' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
+#' @return data.table of Nod_Inf.out results for all timesteps.
 #' @export
 #'
 #' @examples
-#'
-read.nod_inf<- function(project.path, out.file = "Nod_Inf.out", output = NULL, warn = FALSE, ...){
 
-    if(is.null(output) | missing(output)) {
-            output = c("Head", "Moisture", "K", "C", "Flux",
-                       "Sink", "Kappa", "v/KsTop", "Temp")
-      }
+read.nod_inf<- function(project.path,
+                        out.file = "Nod_Inf.out",
+                        output = c("Head", "Moisture", "K", "C", "Flux", "Sink",
+                                   "Kappa", "v/KsTop", "Temp"),
+                        drop.cols = FALSE, ...){
 
-      options(warn = -1)
-      if(warn == TRUE) options(warn = 0)
+  warn.in <- options("warn")$warn #save incoming setting to put it back later
 
-      nod_inf = data.table::fread(input = file.path(project.path, out.file),
-                                  fill = TRUE, blank.lines.skip = FALSE, skip = 10)
+  #two edits needed to be made here from original function
+  # - 1 - Hydrus 4.17 dual perm nod_inf.out file does not have column names for all, and therefore fread does not recognize the header row
+  # - 2 - dual perm has a different file header than single porosity. there is one extra row, so a single value for fread's skip argument
+  #         cannot be assumed. each file is read in full, gets its header row recognized (e.g. by finding text 'Node'), then is fread again
+  #         with the proper skip argument.
 
-      # colnames(nod_inf) = as.character(nod_inf[10, ])
+  #check where first node row is - where to start the file reading, because single porosity models are different than
+  # dual permeability (less rows in file header)
+  node.read <- data.table::fread(input = file.path(project.path,
+                                                   out.file),
+                                 fill = TRUE,
+                                 blank.lines.skip = FALSE,
+                                 skip = 0)
+  first.node <- which(node.read[,1] == "Node")[1]
+  col.heads <- node.read[first.node,]
+  col.heads <- as.character(col.heads)
+  blank.heads <- which(col.heads == "" | col.heads == "NA" |is.na(col.heads))
+  #I know the last column is Temp. No idea what the other one is. I will name it Unknown rather than drop it.
+  # This part is potentially very messy so user will be warned.
+  if(length(blank.heads)>0){
+    warning("Hydrus returned blank column names. These are filled with argument 'blank.names', which may not be correct.")
+    if(is.null(blank.names)){
+      blank.names <- c("Unknown", "Temp")
+    }
+    if(length(blank.names) != length(blank.heads)){
+      #It seems Temp is always last. Fill others with Unknown#.
+      blank.names <- c(paste0("Unknown",100:1), "Temp") #100 reps so it is always too long
+      #this is ugly but it means that Temp is always last and a flexible number of Unknowns are added prior
+      blank.index <- (length(blank.names)-length(blank.heads)+1) : (length(blank.names))
+      blank.names <- blank.names[blank.index]
+    }
+  }
 
-      time_lines = nod_inf[grepl("Time:", nod_inf[["Node"]]), ]
 
-       times = c(0, as.numeric(time_lines$Depth))
+  #this is used to read in files with the correct skip argument. because of blank column names, I need to use the above process.
+  # read in the data, which is separated into tables, one for each time. these tables get combined in the subsequent steps to make a
+  # proper dataset.
+  nod_inf0 = data.table::fread(input = file.path(project.path,
+                                                 out.file),
+                               fill = TRUE,
+                               header = TRUE,
+                               blank.lines.skip = FALSE,
+                               skip = first.node-1)
+  if(length(blank.names)>0){
+    names(nod_inf0)[blank.heads] <- blank.names
+  }
 
-      # dup_times_index = which(duplicated(times))
+  #find rows with timestamps, make a vector of times
+  time_lines = nod_inf0[grepl("Time:", nod_inf0[["Node"]]), ]
+  times = c(0, as.numeric(time_lines$Depth)) #these are the times. zero is appended because the original time=0 line is cutoff when file is read.
+  #change all columns' values to numeric - this will set blanks and text (e.g. 'end') to NA
+  nod_inf <- nod_inf0 #keep copy of the original - for debug, not necessary in the final copy
+  options(warn = -1) #never want to see the NA warnings here
+  for (col in colnames(nod_inf0)) data.table::set(nod_inf, j = col, value = as.numeric(nod_inf[[col]]))
+  options(warn = warn.in)
+  nod_inf = na.omit(nod_inf) #drop NAs to leave only data rows
+  nodes = sort(unique(nod_inf[["Node"]])) #get unique Node numbers
+  nod_inf[, `:=`(Time, rep(times, each = length(nodes)))] #make a new column of times
+  nod_split = split(nod_inf, f = nod_inf$Time) #split table intoa list, one element per time
+  nrow_split = sapply(nod_split, nrow) #rows of each dataset per time
 
-      for (col in colnames(nod_inf)) set(nod_inf, j=col, value= as.numeric(nod_inf[[col]]))
+  #some of the times have more rows than nodes. this is because of the printing resolution (# decimals) of the timestamps,
+  # which doesn't appear to be editable. the steps below just keep the first 1:len(nodes) rows, which makes sense since
+  # these data are the closest to the printed timestamp (e.g. 0.00000012 and 0.00000018 hours may be both printed as 0.0000001, which
+  # is closer to the first value). this might be solvable by changing time units in Hydrus (e.g. use minutes not hours), but
+  # for this function, all I can do is warn.
+  extra_index = which(nrow_split > length(nodes))
+  if(length(extra_index)>0){
+    warning(paste("More than one results table per timestep at times:",
+                  paste(unique(times)[extra_index], collapse = ", "),
+                  ". First table will be kept."))
+  }
+  for (i in extra_index) {
+    nod_split[[i]] = nod_split[[i]][1:length(nodes), ] #keep only first set per duplicated
+  }
+  nod_inf = data.table::rbindlist(nod_split) #bind back together into table
+  if(drop.cols){
+    if(is.null(output)){
+      output <- c("Head", "Moisture", "K", "C", "Flux", "Sink","Kappa", "v/KsTop", "Temp")
+    }
+    output_names = intersect(output, colnames(nod_inf)) #these are the ones to keep
+    output_names = unique(c("Time", "Node", "Depth", output_names)) #plus these standards
+    nod_out = nod_inf[, .SD, .SDcols = output_names]  #now subset columns
+  } else {
+    #if not dropping any, then just move Time to the front
+    output_names = colnames(nod_inf)
+    output_names = output_names[-which(output_names == "Time")]
+    output_names = c("Time", output_names) #move Time to front
+    nod_out = nod_inf[, .SD, .SDcols = output_names]  #rearrange columns
+  }
 
-      # nod_inf[, colnames(nod_inf) := lapply(.SD, as.numeric), .SDcols = colnames(nod_inf)]
-
-      nod_inf = na.omit(nod_inf)
-
-      nodes = sort(unique(nod_inf[["Node"]]))
-
-      nod_inf[, Time:= rep(times, each = length(nodes))]
-
-      nod_split = split(nod_inf, f = nod_inf$Time)
-
-      nrow_split = sapply(nod_split, nrow)
-
-      extra_index = which(nrow_split > length(nodes))
-
-      for(i in extra_index){
-            nod_split[[i]] = nod_split[[i]][1:length(nodes), ]
-      }
-
-
-      nod_inf =  rbindlist(nod_split)
-
-      output_names = intersect(output, colnames(nod_inf))
-      output_names = c("Time", "Node", "Depth", output_names)
-      # dropped_cols = colnames(nod_inf)[!(colnames(nod_inf) %in% output_names)]
-
-      nod_out = nod_inf[, .SD, .SDcols = output_names]
-
-      # node_out<- data.frame(Node = nod_inf$Node,
-      #                       Depth = as.numeric(nod_inf$Depth),
-      #                       nod_inf[, output_names], check.names = FALSE)
-      # names(node_out) = c("Node", "Depth", output_names)
-
-      # node_out = as.data.frame(na.omit(node_out), row.names = NULL, check.names = FALSE)
-      # nodes = unique(node_out$Node)
-      # node_out = data.frame(Time = rep(times, each = length(nodes)), node_out,
-      #                       row.names = NULL, check.names = FALSE)
-    options(warn = 0)
-
-     return(nod_out)
+  return(nod_out)
 
 }

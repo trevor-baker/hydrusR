@@ -7,30 +7,33 @@
 create.H1D.project(
   project.name,
   parent.dir,
-  discription = NULL,
+  description = NULL,
   TimeUnit = "days",
   SpaceUnit = "cm",
   PrintTimes = 1,
   processes = c(WaterFlow = T, RootWaterUptake = F),
   geometry,
   initial.cond,
+  overwrite = FALSE,
   ...
 )
 }
 \arguments{
 \item{project.name}{Name of the project}
 
-\item{parent.dir}{Path to the project folder}
+\item{parent.dir}{Path to the project folder, where a folder with project.name will be saved}
 
-\item{TimeUnit}{Simulation time unit information (default = days)}
+\item{TimeUnit}{Simulation time unit information (default = days). permitted: seconds, minutes, hours, days, years.}
 
-\item{SpaceUnit}{Vertical spatial unit (decault = cm)}
+\item{SpaceUnit}{Vertical spatial unit (decault = cm). permitted: mm, cm, m}
 
-\item{PrintTimes}{Time levels at which the outputs should be printed}
+\item{PrintTimes}{Time levels at which the outputs should be printed. These are the times that willbe output in the Nod_Inf.out file among others.}
 
-\item{processes}{Main processes (e.g., WaterFlow, SoluteTransport etc) to be simualted}
+\item{processes}{Main processes (e.g., WaterFlow, SoluteTransport etc) to be simulated}
 
 \item{geometry}{Profile geometry info (Depth, # of nodes and # of obs nodes)}
+
+\item{overwrite}{if TRUE, function will not ask to overwrite the project if it already exists. careful.}
 }
 \description{
 Creates a new hydrus project folder with "HYDRUS1D.DAT" and "DISCRIPT.TXT" files
@@ -38,10 +41,13 @@ Creates a new hydrus project folder with "HYDRUS1D.DAT" and "DISCRIPT.TXT" files
 \examples{
 
 create.H1D.project(project.name = "testproj2", parent.dir = parent_dir, discription = NULL,
-SpaceUnit = "cm", TimeUnit = "days", PrintTimes = 1,
-processes = c(WaterFlow = T, SoluteTransport = F, RootWaterUptake = F,
-RootGrowth = F, Unsatchem = F, HP1 = F, EquillibriumAdsorption = F,
-initial.cond = c(NumberOfSolutes = 0, InitialCondition = 0),
-geometry = c(ProfileDepth = 200, NumberOfNodes = 4,
-         ObservationNodes = 0, MaterialNumber = 1, SubregionNumber = 1))
+                   SpaceUnit = "cm", TimeUnit = "days", PrintTimes = 1,
+                   processes = c(WaterFlow = T, SoluteTransport = F, RootWaterUptake = F,
+                   RootGrowth = F, Unsatchem = F, HP1 = F, EquillibriumAdsorption = F),
+                   initial.cond = c(NumberOfSolutes = 0, InitialCondition = 0),
+                   geometry = c(ProfileDepth = 200, NumberOfNodes = 4,
+                                ObservationNodes = 0, MaterialNumber = 1, SubregionNumber = 1))
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 }

@@ -18,9 +18,6 @@ write.atmosph.in(
 \arguments{
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Write atmospheric boundary condition inputs
 }
