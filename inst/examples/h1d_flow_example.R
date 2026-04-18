@@ -1,8 +1,11 @@
-library(hydrusR)
+#this example comes with hydrusR
+# - the data it generates (see bottom) is very strange, making me wonder if there is an error in the hydrusR code, an error in Hydrus, or that
+#     I don't understand what the example is trying to show
+# - nonetheless, it does successfully run Hydrus for a single material profile with roots and ET.
+
+library(hydrusR); load_pkg()
 suppressWarnings(library(data.table))
 suppressWarnings(library(dplyr))
-
-## Basic inputs
 
 ## Basic inputs
 TimeUnit = "cm" ## Space units
@@ -14,13 +17,15 @@ endTime = 500
 deltaz = 1
 rdepth = 100
 time_step = 0.25
-soil_para = list(thr = 0.045, ths = 0.43,
-                 Alfa = 0.145, n = 2.69, Ks = 29.7, l = 0.45)
+# soil_para = list(thr = 0.045, ths = 0.43,
+#                  Alfa = 0.145, n = 2.69, Ks = 29.7, l = 0.45)
+soil_para = list(thr = c(0.045,0.1), ths = c(0.43,0.3),
+                 Alfa = c(0.145,0.188), n = c(2.69,1.1), Ks = c(29.7,100), l = c(0.45,-1))
 
 # hydrus_path =  "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"
 
 project_name = "h1dExample5"
-parent_dir = path.expand("~")
+parent_dir = path.expand("~/temp")
 project_path = path.expand(file.path(parent_dir, project_name))
 
 
@@ -94,20 +99,29 @@ atm_bc_data = atm_bc_data[1:ntimesteps, ]
 
 #### Creates a blank hydrus project with three files
 
-create.H1D.project(project.name = project_name, parent.dir = parent_dir,
-                   TimeUnit = TimeUnit, PrintTimes = PrintTimes,
+create.H1D.project(project.name = project_name,
+                   parent.dir = parent_dir,
+                   TimeUnit = TimeUnit,
+                   PrintTimes = PrintTimes,
+                   overwrite = T,
                    processes = c(WaterFlow = T, RootWaterUptake = rwu),
                    geometry = c(ProfileDepth = profile_depth,
                                 NumberOfNodes = length(profile_nodes),
                                 ObservationNodes = nObsNodes))
 
 ### create the soil profile (PROFILE.DAT) info
+# create.soil.profile(project.path = project_path,
+#                     profile.depth = profile_depth,
+#                     dz = deltaz, obs.nodes = NULL)
 create.soil.profile(project.path = project_path,
                     profile.depth = profile_depth,
-                    dz = deltaz, obs.nodes = NULL)
+                    depth.vec = c(0,1,10,50,100,200),
+                    mat = c(1,1,1,1,2,2),
+                    head = -2,
+                    obs.nodes = NULL)
 
 ##Write root distribution
-write.obs.nodes(project.path = project_path, obs.nodes = obs_nodes_all)
+write.obs.nodes(project.path = project_path, obs.nodes = obs_nodes_all) #this causes problems because it leaves a lot of NAs down the row names margin. unsure why. haven't looked.
 
 write.ini.cond(project.path = project_path, wt.depth = initial_wtable)
 
@@ -121,11 +135,32 @@ write.bottom.bc(constant.bc = TRUE, bc.type = bot_bc_type,
 write.atmosph.in(project.path = project_path, maxAL = 2000, deltaT = time_step,
                  atm.bc.data = atm_bc_data[1:2000, ])
 
- ##### Default hydrus path in Windows
+##### Default hydrus path in Windows
 
 run.H1D.simulation(project.path = project_path,
                    profile.depth = profile_depth,
                    beginT = 0, endT = endTime, deltaT = time_step,
                    bot.bc.type = bot_bc_type, bot.bc.value = const_botFlux,
-                   const.bot.bc = TRUE,atm.bc.data = atm_bc_data, TimeUnit = TimeUnit,
+                   const.bot.bc = TRUE, atm.bc.data = atm_bc_data,
+                   TimeUnit = TimeUnit,
                    show.output = T)
+
+#read outputs
+#####################
+library(ggplot2)
+df.n <- read.nod_inf(project.path = project_path)
+# - this data really looks werid but maybe the example is nonsense?
+
+#Moisture over time.
+df.n %>%
+  filter(Node %in% Node[seq(1,max(Node),length=6)]) %>%
+  ggplot(aes(x = Time, y = Moisture, color = -Depth, group = -Depth)) +
+  geom_line() +
+  facet_wrap(~-Depth)
+
+#Head over time
+df.n %>%
+  filter(Node %in% Node[seq(1,max(Node),length=6)]) %>%
+  ggplot(aes(x = Time, y = Head, color = -Depth, group = -Depth)) +
+  geom_line() +
+  facet_wrap(~-Depth)

@@ -31,18 +31,20 @@ create.H1D.project <- function(project.name,
                                initial.cond,
                                overwrite = FALSE, ...){
 
+  #list all possible args and named elements of args
   all_args = c("WaterFlow", "SoluteTransport", "RootWaterUptake",
                "RootGrowth", "Unsatchem", "HP1", "EquillibriumAdsorption",
                "NumberOfSolutes", "InitialCondition", "geometry",
-               "project.name", "parent.dir", "discription",
+               "project.name", "parent.dir", "description",
                "TimeUnit", "SpaceUnit", "PrintTimes")
 
-
+  #set up paths and file names
   project_path = file.path(parent.dir, project.name)
   descript_file = file.path(project_path, "DESCRIPT.TXT")
   h1ddat_file = file.path(project_path, "HYDRUS1D.DAT")
+  #give description if there was none given
   description = ifelse(is.null(description), paste("project title:", project.name), description)
-
+  #set warning message
   disp_msg = paste("Folder", project.name, "already exists. All files will be deleted.Proceed? y/n \n")
 
   if(dir.exists(project_path)) {
@@ -58,7 +60,7 @@ create.H1D.project <- function(project.name,
         stop("HYDRUS1D project not created\n")
       }
     } else { #else arg says to overwrite without asking
-      cat("project_path automatically overwritten due to 'overwrite' argument.")
+      cat("project_path automatically overwritten due to 'overwrite' argument.\n")
       unlink(project_path, recursive = TRUE, force = TRUE)
       dir.create(project_path)
     }

@@ -37,14 +37,15 @@ read.nod_inf<- function(project.path,
   first.node <- which(node.read[,1] == "Node")[1]
   col.heads <- node.read[first.node,]
   col.heads <- as.character(col.heads)
+  #seems that Temp is always last, and in some cases a blank column past Temp is detected and an error occurs trying to assign
+  # a name to it later on.
+  if(any(col.heads == "Temp")){ col.heads <- col.heads[1:which(col.heads == "Temp")] } #if any named Temp, cut it off there.
   blank.heads <- which(col.heads == "" | col.heads == "NA" |is.na(col.heads))
   #I know the last column is Temp. No idea what the other one is. I will name it Unknown rather than drop it.
   # This part is potentially very messy so user will be warned.
   if(length(blank.heads)>0){
     warning("Hydrus returned blank column names. These are filled with argument 'blank.names', which may not be correct.")
-    if(is.null(blank.names)){
-      blank.names <- c("Unknown", "Temp")
-    }
+    blank.names <- c("Unknown", "Temp") #have only seen where there are two blanks, but lines below allow flexibility
     if(length(blank.names) != length(blank.heads)){
       #It seems Temp is always last. Fill others with Unknown#.
       blank.names <- c(paste0("Unknown",100:1), "Temp") #100 reps so it is always too long
@@ -64,7 +65,7 @@ read.nod_inf<- function(project.path,
                                header = TRUE,
                                blank.lines.skip = FALSE,
                                skip = first.node-1)
-  if(length(blank.names)>0){
+  if(length(blank.heads)>0){
     names(nod_inf0)[blank.heads] <- blank.names
   }
 
@@ -89,7 +90,7 @@ read.nod_inf<- function(project.path,
   # for this function, all I can do is warn.
   extra_index = which(nrow_split > length(nodes))
   if(length(extra_index)>0){
-    warning(paste("More than one results table per timestep at times:",
+    warning(paste0("More than one results table per timestep at times: ",
                   paste(unique(times)[extra_index], collapse = ", "),
                   ". First table will be kept."))
   }
