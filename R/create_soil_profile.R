@@ -12,7 +12,7 @@
 #' row numbers of the soil hydraulic parameters table. e.g., if that table has two rows, then all values in mat will be either 1 or 2 to
 #' denote which material to use at this point.
 #' @param obs.nodes Vector of observation points in the profile
-#' @param head starting values for head (matric potential). Default is -0.1. If given as positive values, they will be converted to negative for
+#' @param Head starting values for head (matric potential). Default is -0.1. If given as positive values, they will be converted to negative for
 #' creating the input file. In the same length unit as the overall project. if length = 1, it will be replicated for every layer. if length > 1,
 #' then it must be same length as depth.vec, one Temp value per layer. Beware setting this to 0 if the intention is to simulate drainage from
 #' saturation due to instability and convergence problems near saturation. Starting at slightly negative values (e.g. -0.1 or -1 cm) will increase modelling
@@ -27,13 +27,13 @@
 #'
 #' @examples
 
-create.soil.profile<- function(project.path,
+create.soil.profile <- function(project.path,
                                out.file = "PROFILE.DAT",
                                profile.depth = 100,
                                depth.vec,
                                dz = 1,
                                mat,
-                               head = -0.1,
+                               Head = -0.1,
                                Temp = 20,
                                Conc = 0,
                                obs.nodes = NULL, ...) {
@@ -46,7 +46,7 @@ create.soil.profile<- function(project.path,
     depth.vec <- seq(0, profile.depth, by=dz)
   }
   if(min(depth.vec) != 0 | max(depth.vec) != profile.depth){
-    stop("node.depths must span from 0 to profile.depth")
+    stop("depth.vec must span from 0 to profile.depth")
   }
   if(length(mat) != length(depth.vec)){
     stop("length of mat must be the same as length of depth.vec. One identifying integer per layer.")
@@ -59,9 +59,9 @@ create.soil.profile<- function(project.path,
   }
   #force to positive numbers
   profile.depth = abs(profile.depth)
-  node.depths <- abs(node.depths)
+  depth.vec <- abs(depth.vec)
   #force negative
-  head <- -abs(head)
+  Head <- -abs(Head)
 
 
 
@@ -90,9 +90,9 @@ create.soil.profile<- function(project.path,
   #extract the header row of the table (incl column names)
   table_header = profile_dat[4]
   dhead_val = substr(table_header, start = 1, stop = 5) #the first part indicates profile depth
-  dhead_val = as.numeric(trimws(dhead_val))
+  dhead_val = as.numeric(trimws(dhead_val)) #the depth of the template file
   header_rest = substr(table_header, start = 6, stop = nchar(table_header)) #this is the remainder of the header
-  dhead_val_new = sprintf("%5s", (profile.depth + 1)) #expected number is 1 higher than the depth
+  dhead_val_new = sprintf("%5s", length(depth.vec)) #expected number is 1 higher than the depth
   #paste together the header line with the new depth in it
   table_header_new = paste0(dhead_val_new, header_rest)
 
@@ -127,8 +127,8 @@ create.soil.profile<- function(project.path,
   depth_vec_fmt = mapply(FUN = format2sci, depth.vec, ndec = 6, power.digits = 3)
   depth_vec_fmt = paste0("-", depth_vec_fmt)
 
-  #prepare head column of initial matric potential.
-  head_vec = rep(head, length(depth.vec))[1:length(depth.vec)]
+  #prepare Head column of initial matric potential.
+  head_vec = rep(Head, length(depth.vec))[1:length(depth.vec)]
   head_vec_fmt = mapply(FUN = format2sci, head_vec, ndec = 6, power.digits = 3)
 
   #prepare vector of material ID numbers
@@ -173,8 +173,10 @@ create.soil.profile<- function(project.path,
 
   profile_file = file.path(project.path, out.file)
 
+  #write PROFILE.DAT, which may be modified below by write.obs.nodes
   write(profile_data_new, file = profile_file, append = FALSE)
 
+  #add observation node info, if there are any
   if(!is.null(obs.nodes)) write.obs.nodes(project.path, obs.nodes)
   print("PROFILE: what are obs.nodes?")
 

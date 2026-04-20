@@ -118,14 +118,20 @@ create.soil.profile(project.path = project_path,
                     depth.vec = c(0,1,10,50,100,200),
                     mat = c(1,1,1,1,2,2),
                     head = -2,
-                    obs.nodes = NULL)
+                    obs.nodes = obs_nodes_all)
 
-##Write root distribution
-write.obs.nodes(project.path = project_path, obs.nodes = obs_nodes_all) #this causes problems because it leaves a lot of NAs down the row names margin. unsure why. haven't looked.
 
-write.ini.cond(project.path = project_path, wt.depth = initial_wtable)
+# #commented this out because it is called in create.soil.profile already. no need to duplicate.
+# write.obs.nodes(project.path = project_path, obs.nodes = obs_nodes_all)
 
-write.root.dist(project.path = project_path,  rdepth = rooting_depth, rBeta = 0.962)
+#set water table
+write.ini.cond(project.path = project_path,
+               wt.depth = initial_wtable)
+
+#write root dist into Beta column - why not just have this and water table above be part of soil.profile fn?
+write.root.dist(project.path = project_path,
+                rdepth = rooting_depth,
+                rBeta = 0.962)
 
 write.hydraulic.para(project.path = project_path, para = soil_para)
 

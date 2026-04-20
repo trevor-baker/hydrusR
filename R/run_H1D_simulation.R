@@ -89,12 +89,13 @@ run.H1D.simulation = function(project.path, hydrus.path = NULL, profile.depth,
          h1d_output =  data.table::fread(input = file.path(project.path, "Nod_Inf.out"),
                                          fill = TRUE, blank.lines.skip = FALSE, skip = 10)
 
-         time_ind = grep("Time:", h1d_output[["Node"]])
-         to_skip = time_ind[length(time_ind)]+2
+         time_ind = grep("Time:", h1d_output[["Node"]]) #which rows ar eheaders for a new timestep?
+         to_skip = time_ind[length(time_ind)]+2 #skip to the final timestep
 
          head_profile = h1d_output[to_skip:nrow(h1d_output), c("Node", "Depth", "Head")]
          head_profile = as.data.frame(apply(head_profile, 2, as.numeric))
          head_profile = na.omit(head_profile)
+         if(nrow(head_profile)==0){ stop("read nod_inf separately. see why all Head rows are NaN") }
          pressure_vec = head_profile$Head
 
          options(warn = 0)
