@@ -109,7 +109,11 @@ create.H1D.project(project.name = project_name,
                                 ObservationNodes = nObsNodes),
                    soil.para = soil_para,
                    soil.model = 0,
-                   soil.hys = 0)
+                   soil.hys = 0,
+                   rwu.stress = c(model = 0, comp = 1,
+                                  P0 = -10, P2H = -200, P2L = -800, P3 = -15291,
+                                  POptm = -25,
+                                  r2H = 0.5, r2L = 0.1))
 
 ### create the soil profile (PROFILE.DAT) info
 create.soil.profile(project.path = project_path,
@@ -140,9 +144,11 @@ write.atmosph.in(project.path = project_path, maxAL = 2000, deltaT = time_step,
 
 
 #to do:
-# - SELECTOR.IN has 2 Block B headers. likely from write.hyd.params
 # - need a function to set Block B of SELECTOR - MaxIt, TolTh, TolH, and freeD = T (and associ'd settings)
-# - function to set Block C time info. put this in create.project.
+# - put write.root.dist into create.soi.profile?
+# - understand/edit write.bottom.bc and write.atmosph.in
+# - write a wrapper fn in IEGsoil to contain all of these and transfer the correct data.
+# -- prior to this just test simple loop of 2 simulations.
 
 
 ##### Default hydrus path in Windows

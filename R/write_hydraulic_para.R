@@ -129,11 +129,11 @@ write.hydraulic.para<- function(project.path,
     input_data[flow_block_ind : (time_block_ind - 1)] <- flow_block
   } else {
     #put input_data together from scratch to fit everything
-    input_data <- c(input_data[1:basic_inf_ind],
-                    input_data[(basic_inf_ind+1) : flow_block_ind],
+    input_data <- c(input_data[1:(basic_inf_ind-1)],
+                    input_data[basic_inf_ind : (flow_block_ind-1)],
                     flow_block, #sub new flow_block into this spot
-                    input_data[(time_block_ind+1) : rwu_block_ind],
-                    input_data[(rwu_block_ind+1) : length(input_data)])
+                    input_data[time_block_ind : (rwu_block_ind-1)],
+                    input_data[rwu_block_ind : length(input_data)])
   }
 
   #write to SELECTOR.IN file
