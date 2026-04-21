@@ -8,9 +8,13 @@
 #' profile will be split into layers of dz length.
 #' @param dz numeric, length = 1. the length of discrete layers in the soil profile. only used if depth.vec not given, in which case the profile.depth
 #' is split into layers of length=dz.
-#' @param mat the material number associated with each value in depth.vec. integer, same length as depth.vec. integer values must correspond to the
-#' row numbers of the soil hydraulic parameters table. e.g., if that table has two rows, then all values in mat will be either 1 or 2 to
-#' denote which material to use at this point.
+#' @param mat the material number associated with each value in depth.vec. integer, same length as depth.vec. or length = 1 if all are same material.
+#' integer values must correspond to the row numbers of the soil hydraulic parameters table. e.g., if that table has two rows, then all values in
+#' 'mat' will be either 1 or 2 to denote which material to use at this point.
+#' @param lyr the layer number (aka subregion) for mass balance calculations. integer, same length as depth.vec. or length = 1 if only one mass
+#' balance node is wanted. Leave as NULL to have it set identically to 'mat', which will mean one subregion per distinct material. It is recommended
+#' to have at least one subregion per distinct material, which could be optionally split into smaller subregions. These mass balance subregions
+#' are assessed at each timestep for conformance to solution tolerances (e.g., within 1 cm head and 0.001 m3/m3 moisture).
 #' @param obs.nodes Vector of observation points in the profile
 #' @param Head starting values for head (matric potential). Default is -0.1. If given as positive values, they will be converted to negative for
 #' creating the input file. In the same length unit as the overall project. if length = 1, it will be replicated for every layer. if length > 1,
@@ -28,15 +32,27 @@
 #' @examples
 
 create.soil.profile <- function(project.path,
-                               out.file = "PROFILE.DAT",
-                               profile.depth = 100,
-                               depth.vec,
-                               dz = 1,
-                               mat,
-                               Head = -0.1,
-                               Temp = 20,
-                               Conc = 0,
-                               obs.nodes = NULL, ...) {
+                                 out.file = "PROFILE.DAT",
+                                 profile.depth = 100,
+                                 depth.vec = NULL,
+                                 dz = 1,
+                                 mat = 1,
+                                 lyr = NULL,
+                                 Head = -0.1,
+                                 Temp = 20,
+                                 Conc = 0,
+                                 obs.nodes = NULL, ...) {
+
+  #PROFILE.DAT columns:
+  # - column 1, unnamed in PROFILE.DAT, z [L]: z-coordinate of node n [L] (depth).
+  # - h [L]: pressure head
+  # - Mat [-]: material code. integer corresponding to soil parameters.
+  # - Lay [-]: subregion number. integer.
+  # - Beta [1/L]: root density in this Node. displayed as 'Root' in Hydrus GUI. Numeric between 0-1. Sum of all Beta values will be normalized to sum=1 by Hydrus, so only relative values are meaningful here.
+  # - Axz, Bxz, Dxz [-]: Nodal value of the dimensionless scaling factor associated with the pressure head, hydraulic conductivity, and moisutre content. Leave all as 1.
+  # - Temp [deg C]: temperature of this Node to start. doesn't matter for water flow, only for solute modelling.
+  # - Conc [M/L^3]: concentration of solute in this Node to start. ignore for water flow.
+
 
   #check inputs
   if(length(profile.depth) != 1 | !is.numeric(profile.depth)){
@@ -48,8 +64,17 @@ create.soil.profile <- function(project.path,
   if(min(depth.vec) != 0 | max(depth.vec) != profile.depth){
     stop("depth.vec must span from 0 to profile.depth")
   }
-  if(length(mat) != length(depth.vec)){
+  if(length(mat) != length(depth.vec) & length(mat) != 1){
     stop("length of mat must be the same as length of depth.vec. One identifying integer per layer.")
+  } else if (length(mat) == 1){
+    mat <- rep(mat, length(depth.vec))
+  }
+  if(is.null(lyr)){
+    lyr <- mat
+  } else if(length(lyr) != length(depth.vec) & length(lyr) != 1){
+    stop("length of lyr must be the same as length of depth.vec. One identifying integer per layer.")
+  } else if (length(mat) == 1){
+    lyr <- rep(lyr, length(depth.vec))
   }
   if(!(length(Temp) %in% c(1, length(depth.vec)))){
     stop("Temp must have length = 1 or same length as depth.vec")
@@ -136,7 +161,6 @@ create.soil.profile <- function(project.path,
   mat_vec_fmt = mat_vec #these do not get the fancy decimal formatting
 
   layer_vec_fmt = mat_vec_fmt #these prob should not be the same. does not get fancy decimal formatting. just an integer.
-  print("PROFILE: unsure difference of mat and layer")
 
   #bring all the prepped and formatted columns together
   profile_df = data.frame(row_counts,
@@ -179,6 +203,14 @@ create.soil.profile <- function(project.path,
   #add observation node info, if there are any
   if(!is.null(obs.nodes)) write.obs.nodes(project.path, obs.nodes)
   print("PROFILE: what are obs.nodes?")
+
+  #add Subregion count to HYDRUS1D.DAT file
+  h1d_path = file.path(project.path, "HYDRUS1D.DAT")
+  h1d_dat = readLines(h1d_path, n = -1L, encoding = "unknown")
+  h1d_indx <- which(grepl("SubregionNumbers", h1d_dat))
+  h1d_sr <- paste0("SubregionNumbers=",length(unique(lyr)))
+  h1d_dat[h1d_indx] <- h1d_sr
+  write(h1d_dat, file = h1d_path, append = FALSE)
 
 } #end fn
 

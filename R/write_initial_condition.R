@@ -1,18 +1,21 @@
 #' Write initial pressure head conditions in profile.dat (water table)
 #'
 #' This function will allow the user to give either a vector of pressure head values or a water table depth to a soil profile. If both are given,
-#' water table is ignored. These inputs will determine the initial moisture condition of the soil profile.
-#' Note that the Head argument of create.soil.profile makes the pr.vec part of this function redundant. Probably better to enter this data in
-#' create.soil.profile. The only novel  use for this function is to set the water table depth.
+#' water table is ignored. These inputs will determine the initial moisture condition of the soil profile. This is used both when setting up a simulation
+#' and by run.H1D.simulation() when looping through long timeframes to transfer values from the endpoint of one simulaiton to the start of the next. \cr
+#' Note that the Head argument of create.soil.profile makes the pr.vec part of this function redundant for setting up a simulation. For setting up,
+#' it will be easier for traceback to enter this data via create.soil.profile. If a water table is desired for initial conditions, then this function
+#' can be used.
 #' @param project.path Path of HYDRUS1D project. Must contain a PROFILE.DAT file already. e.g., from create.soil.profile()
-#' @param pr.vec A vector of pressure head values (length = # of total nodes in the profile)
-#' @param wt.depth Depth of water table (to assign hydrostatic initial condition)
+#' @param pr.vec A vector of pressure head values (length = # of total nodes in the profile). Same length units as overall project.
+#' @param wt.depth Depth of water table (to assign hydrostatic initial condition). In same length units as overall project.
 #' @param ...
 #'
 #' @return
 #' @export
 #'
 #' @examples
+
 write.ini.cond<- function(project.path,
                           pr.vec = NULL,
                           wt.depth = NULL, ...) {
@@ -68,12 +71,14 @@ write.ini.cond<- function(project.path,
 
   #note: the structure of this can cause issues. if someone gives pr.vec, then their wt.depth will be ignored.
   if(!is.null(pr.vec)){
-    print("These pr.vec values can also be given in the Head argument of create.soil.profile")
     ini_pr_vec = pr.vec #if user gave pressure heads, then use them
     if(!is.null(wt.depth)){ warning("wt.depth is being ignored because pr.vec was given.") }
   } else if(!is.null(wt.depth)){
     node.depths <- -as.numeric(profile_data_new[,2]) #need these to be positive to match previous code
     ini_pr_vec =  node.depths - wt.depth #this sets heads relative to zero water depth. -1 cm/cm above water, +1 cm/cm below
+  } else {
+    cat("write.ini.cond: No data for pressure head or water table given. No changes made.")
+    return()
   }
 
   #format these pressure heads

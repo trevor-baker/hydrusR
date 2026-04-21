@@ -2,17 +2,17 @@
 % Please edit documentation in R/write_obs_nodes.R
 \name{write.obs.nodes}
 \alias{write.obs.nodes}
-\title{Write observation nodes in profile.dat}
+\title{Write observation nodes to profile.dat}
 \usage{
 write.obs.nodes(project.path, obs.nodes = NULL, ...)
 }
 \arguments{
-\item{project.path}{path to the hydrus project}
+\item{project.path}{path to the Hydrus project.}
 
-\item{obs.nodes}{Observation nodes}
+\item{obs.nodes}{Observation node depths. Numeric vector. Same length units as the project. Leave NULL if none wanted.}
 }
 \description{
-Write observation nodes in profile.dat
+Observation nodes (count and depths of each) are the last two rows of PROFILE.DAT
 }
 \examples{
 \dontrun{

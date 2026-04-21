@@ -2,21 +2,24 @@
 % Please edit documentation in R/write_initial_condition.R
 \name{write.ini.cond}
 \alias{write.ini.cond}
-\title{Write root distribution in profile.dat}
+\title{Write initial pressure head conditions in profile.dat (water table)}
 \usage{
-write.ini.cond(project.path, pr.vec = NULL, wt.depth, ...)
+write.ini.cond(project.path, pr.vec = NULL, wt.depth = NULL, ...)
 }
 \arguments{
-\item{project.path}{Path of HYDRUS1D project}
+\item{project.path}{Path of HYDRUS1D project. Must contain a PROFILE.DAT file already. e.g., from create.soil.profile()}
 
-\item{pr.vec}{A vector of pressure head values (length = # of total nodes in the profile)}
+\item{pr.vec}{A vector of pressure head values (length = # of total nodes in the profile). Same length units as overall project.}
 
-\item{wt.depth}{Depth of water table (to assign hydrostatic initial condition)}
+\item{wt.depth}{Depth of water table (to assign hydrostatic initial condition). In same length units as overall project.}
 
 \item{...}{}
-
-\item{profile.depth}{Depth of soil profile}
 }
 \description{
-Write root distribution in profile.dat
+This function will allow the user to give either a vector of pressure head values or a water table depth to a soil profile. If both are given,
+water table is ignored. These inputs will determine the initial moisture condition of the soil profile. This is used both when setting up a simulation
+and by run.H1D.simulation() when looping through long timeframes to transfer values from the endpoint of one simulaiton to the start of the next. \cr
+Note that the Head argument of create.soil.profile makes the pr.vec part of this function redundant for setting up a simulation. For setting up,
+it will be easier for traceback to enter this data via create.soil.profile. If a water table is desired for initial conditions, then this function
+can be used.
 }

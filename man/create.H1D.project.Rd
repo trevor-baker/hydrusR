@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_H1D_project.R
 \name{create.H1D.project}
 \alias{create.H1D.project}
-\title{Creates a new hydrus project folder with "HYDRUS1D.DAT" and "DISCRIPT.TXT" files}
+\title{Creates a new hydrus project folder with "HYDRUS1D.DAT", "SELECTOR.IN" and "DESCRIPT.TXT" files}
 \usage{
 create.H1D.project(
   project.name,
@@ -13,6 +13,9 @@ create.H1D.project(
   PrintTimes = 1,
   processes = c(WaterFlow = T, RootWaterUptake = F),
   geometry,
+  soil.para,
+  soil.model,
+  soil.hys,
   initial.cond,
   overwrite = FALSE,
   ...
@@ -33,10 +36,16 @@ create.H1D.project(
 
 \item{geometry}{Profile geometry info (Depth, # of nodes and # of obs nodes)}
 
+\item{soil.para}{List of soil hydraulic parameters, one entry per material to be included in simulation. See ?hydrusR::write.hydraulic.para for details.}
+
+\item{soil.model}{integer, 0-7. identifies the soil model to be used. 0 = standard van Genuchten-Mualem. See ?hydrusR::write.hydraulic.para for details.}
+
+\item{soil.hys}{include hysteresis in simulation? integer. 0 = No, 1 = Yes.}
+
 \item{overwrite}{if TRUE, function will not ask to overwrite the project if it already exists. careful.}
 }
 \description{
-Creates a new hydrus project folder with "HYDRUS1D.DAT" and "DISCRIPT.TXT" files
+Creates a new hydrus project folder with "HYDRUS1D.DAT", "SELECTOR.IN" and "DESCRIPT.TXT" files
 }
 \examples{
 

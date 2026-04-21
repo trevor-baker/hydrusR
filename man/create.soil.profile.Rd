@@ -7,8 +7,12 @@
 create.soil.profile(
   project.path,
   out.file = "PROFILE.DAT",
-  profile.depth,
+  profile.depth = 100,
+  depth.vec = NULL,
   dz = 1,
+  mat = 1,
+  lyr = NULL,
+  Head = -0.1,
   Temp = 20,
   Conc = 0,
   obs.nodes = NULL,
@@ -18,15 +22,39 @@ create.soil.profile(
 \arguments{
 \item{project.path}{Location of the H1D project in the directory}
 
-\item{out.file}{Default is always 'PROFILE.OUT'}
+\item{out.file}{Default is always 'PROFILE.DAT'}
 
-\item{dz}{Descretization step of the profile.}
+\item{profile.depth}{total profile depth. numeric, length = 1. positive value. in same length units as project.}
 
-\item{Temp}{Temperate input default is 20 degree C}
+\item{depth.vec}{the depths of discrete layers within the soil profile. numeric, any length. in same length units as project. must span from
+0 for profile upper boundary to the value given in profile.depth for the lower boundary. positive values. if this is not given, then the soil
+profile will be split into layers of dz length.}
 
-\item{Conc}{Concentration, zero in initial profile}
+\item{dz}{numeric, length = 1. the length of discrete layers in the soil profile. only used if depth.vec not given, in which case the profile.depth
+is split into layers of length=dz.}
 
-\item{obs.nodes}{Observation nodes}
+\item{mat}{the material number associated with each value in depth.vec. integer, same length as depth.vec. or length = 1 if all are same material.
+integer values must correspond to the row numbers of the soil hydraulic parameters table. e.g., if that table has two rows, then all values in
+'mat' will be either 1 or 2 to denote which material to use at this point.}
+
+\item{lyr}{the layer number (aka subregion) for mass balance calculations. integer, same length as depth.vec. or length = 1 if only one mass
+balance node is wanted. Leave as NULL to have it set identically to 'mat', which will mean one subregion per distinct material. It is recommended
+to have at least one subregion per distinct material, which could be optionally split into smaller subregions. These mass balance subregions
+are assessed at each timestep for conformance to solution tolerances (e.g., within 1 cm head and 0.001 m3/m3 moisture).}
+
+\item{Head}{starting values for head (matric potential). Default is -0.1. If given as positive values, they will be converted to negative for
+creating the input file. In the same length unit as the overall project. if length = 1, it will be replicated for every layer. if length > 1,
+then it must be same length as depth.vec, one Temp value per layer. Beware setting this to 0 if the intention is to simulate drainage from
+saturation due to instability and convergence problems near saturation. Starting at slightly negative values (e.g. -0.1 or -1 cm) will increase modelling
+success and affect results minimally.}
+
+\item{Temp}{Temperature input. default is 20 degree C. if length = 1, it will be replicated for every layer. if length > 1, then it must be same length
+as depth.vec, one Temp value per layer.}
+
+\item{Conc}{Concentration in initial profile. if length = 1, it will be replicated for every layer. if length > 1, then it must be same length
+as depth.vec, one Conc value per layer. If not doing solute modelling, the Conc value will have no effect and can be left as default.}
+
+\item{obs.nodes}{Vector of observation points in the profile}
 }
 \description{
 Creates a new PROFILE.DAT file using a template included in the package.

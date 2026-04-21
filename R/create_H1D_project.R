@@ -1,4 +1,4 @@
-#' Creates a new hydrus project folder with "HYDRUS1D.DAT" and "DISCRIPT.TXT" files
+#' Creates a new hydrus project folder with "HYDRUS1D.DAT", "SELECTOR.IN" and "DESCRIPT.TXT" files
 #'
 #' @param project.name Name of the project
 #' @param parent.dir  Path to the project folder, where a folder with project.name will be saved
@@ -7,6 +7,9 @@
 #' @param SpaceUnit Vertical spatial unit (decault = cm). permitted: mm, cm, m
 #' @param PrintTimes Time levels at which the outputs should be printed. These are the times that willbe output in the Nod_Inf.out file among others.
 #' @param geometry Profile geometry info (Depth, # of nodes and # of obs nodes)
+#' @param soil.para List of soil hydraulic parameters, one entry per material to be included in simulation. See ?hydrusR::write.hydraulic.para for details.
+#' @param soil.model integer, 0-7. identifies the soil model to be used. 0 = standard van Genuchten-Mualem. See ?hydrusR::write.hydraulic.para for details.
+#' @param soil.hys include hysteresis in simulation? integer. 0 = No, 1 = Yes.
 #' @param overwrite if TRUE, function will not ask to overwrite the project if it already exists. careful.
 #' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 #' @export
@@ -28,22 +31,25 @@ create.H1D.project <- function(project.name,
                                PrintTimes = 1,
                                processes = c(WaterFlow = T, RootWaterUptake = F),
                                geometry,
+                               soil.para,
+                               soil.model,
+                               soil.hys,
                                initial.cond,
                                overwrite = FALSE, ...){
 
-  #list all possible args and named elements of args
-  all_args = c("WaterFlow", "SoluteTransport", "RootWaterUptake",
-               "RootGrowth", "Unsatchem", "HP1", "EquillibriumAdsorption",
-               "NumberOfSolutes", "InitialCondition", "geometry",
-               "project.name", "parent.dir", "description",
-               "TimeUnit", "SpaceUnit", "PrintTimes")
+  # #list all possible args and named elements of args
+  # # - this isn't used anywhere but could be helpful to understand file structure etc.
+  # all_args = c("WaterFlow", "SoluteTransport", "RootWaterUptake",
+  #              "RootGrowth", "Unsatchem", "HP1", "EquillibriumAdsorption",
+  #              "NumberOfSolutes", "InitialCondition", "geometry",
+  #              "soil.para", "soil.model", "soil.hys",
+  #              "project.name", "parent.dir", "description",
+  #              "TimeUnit", "SpaceUnit", "PrintTimes")
 
   #set up paths and file names
   project_path = file.path(parent.dir, project.name)
   descript_file = file.path(project_path, "DESCRIPT.TXT")
   h1ddat_file = file.path(project_path, "HYDRUS1D.DAT")
-  #give description if there was none given
-  description = ifelse(is.null(description), paste("project title:", project.name), description)
   #set warning message
   disp_msg = paste("Folder", project.name, "already exists. All files will be deleted.Proceed? y/n \n")
 
@@ -69,45 +75,68 @@ create.H1D.project <- function(project.name,
     dir.create(project_path)
   }
 
+
+
   #process arguments into a vector
-  args_vec0 = as.list(match.call()) #renamed as 0 for debug
+  args_vec0 <- as.list(match.call()) #renamed as 0 for debug
+  #pull out the soil arguments - they are dealt with separately
+  soil.args <- which(grepl("soil.",names(args_vec0)))
+  if(length(soil.args)>0){
+    args_vec0 <- args_vec0[-soil.args]
+  }
+  #add one more arg for material numbers
+  args_vec0$MaterialNumbers <- length(soil.para) #number of list entries is number of materials
+  #deal with remaining arguments
   args_vec = lapply(args_vec0[-1], FUN = function(x) unlist(x))
   # args_vec = unlist(unclass(args_vec))
-  args_vec = do.call("c", args_vec)
-  args_vec = ifelse(args_vec == TRUE, 1, args_vec)
+  args_vec = do.call("c", args_vec) #this sets the values properly
+  args_vec = ifelse(args_vec == TRUE, 1, args_vec) #convert logicals to numeric to match Hydrus input format
   args_vec = ifelse(args_vec == FALSE, 0, args_vec)
 
-  names(args_vec) = gsub("processes.", "", names(args_vec), fixed = TRUE)
+  names(args_vec) = gsub("processes.", "", names(args_vec), fixed = TRUE) #edit names to those expected by Hydrus
   names(args_vec) = gsub("geometry.", "", names(args_vec), fixed = TRUE)
   names(args_vec) = gsub("initial.cond.", "", names(args_vec), fixed = TRUE)
 
-
-  args_vec["ProfileDepth"] = toupper(format2sci(as.numeric(args_vec["ProfileDepth"]),
-                                            ndec = 2, power.digits = 3))
-
-  args_names = names(args_vec)
-
-  h1d_args_names = args_names[!(args_names %in% c("project.name", "parent.dir", "description"))]
-  # h1d_args_names = gsub("Profile.", "", h1d_args_names, fixed = TRUE)
+  #convert profile depth into sci format wanted by Hydrus
+  args_vec["ProfileDepth"] <- toupper(format2sci(as.numeric(args_vec["ProfileDepth"]),
+                                                 ndec = 2, power.digits = 3))
 
 
+
+  args_names <- names(args_vec)
+  #keep only the args that get passed to HYDRUS1D.DAT - these 4 do not
+  h1d_args_names = args_names[!(args_names %in% c("project.name", "parent.dir", "description","overwrite"))]
+
+
+  ######################
+  #create HYDRUS1D.DAT file
   hydrus1d_template = system.file("templates/HYDRUS1D.DAT", package = "hydrusR")
   h1d_dat = readLines(hydrus1d_template, n = -1L, encoding = "unknown")
-
-  descript_vec = c("Pcp_File_Version=1", description)
 
   for(a in 1:length(h1d_args_names)){
         arg_a = h1d_args_names[a]
         arg_value = args_vec[arg_a]
         arg_index = grep(arg_a, h1d_dat)
         h1d_dat[arg_index] = paste0(arg_a, "=", arg_value)
-
   }
-
-  write(descript_vec, file = descript_file, append = FALSE)
+  #write it to file
   write(h1d_dat, file = h1ddat_file, append = FALSE)
 
+  #note: the SubregionNumbers argument is edited in create.soil.profile
 
+
+  ######################
+  #write DESCRIPT.TXT file
+  description = ifelse(is.null(description), #give description if there was none given
+                       paste("project title:", project.name),
+                       description)
+  descript_vec = c("Pcp_File_Version=1", description)
+  write(descript_vec, file = descript_file, append = FALSE)
+
+
+
+  #####################
+  #prepare SELECTOR.IN file
   selector_in = system.file("templates/SELECTOR.IN", package = "hydrusR")
   selector_data = readLines(selector_in, n = -1L, encoding = "unknown")
 
@@ -144,6 +173,14 @@ create.H1D.project <- function(project.name,
   selector_data[timeinfo_ind + 2] = timeinfo_new_str
 
   write(selector_data, file = file.path(project_path, basename(selector_in)), append = F)
+
+  ##############
+  #add soil params to SELECTOR.IN
+  write.hydraulic.para(project.path = project_path,
+                       model = soil.model,
+                       hysteresis = soil.hys,
+                       para = soil.para)
+
 
   cat("New HYDRUS-1D project created in", project_path, "...\n")
 

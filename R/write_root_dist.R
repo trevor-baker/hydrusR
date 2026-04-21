@@ -58,7 +58,7 @@ write.root.dist<- function(project.path,
     cat("write_root_dist: A row in the soil data should be added at bottom rooting depth, 'rdepth'. See code notes.")
     #fudge it so that the layer containing the bottom of roots gets rooting assigned.
     # e.g layers at 60-80 and 80-100. rooting depth at 90. without fusging this value, the 80-100 layer would be assigned no roots
-    rdepth_coord <- c(rdepth_coord,rdepth)
+    rdepth_coord <- sort(c(rdepth_coord,rdepth))
   }
   #it would not be hard to edit the code here to insert a new row at rdepth. would need to copy the correct Node row, and edit the value in
   # the header that gives num_nodes (add 1)
@@ -74,7 +74,7 @@ write.root.dist<- function(project.path,
   #
   #new code uses rBeta but written differently because not all layers have same thickness
   smallest.int <- min(diff(all_depths)) #this needs to be the basis so that even the thinnest layer gets correct value
-  all.int <- seq(0,max(all_depths),smallest.int)
+  all.int <- seq(0,max(rdepth_coord),smallest.int) #sequence from 0 to rooting depth at the smallest interval
   all.rdist <-  1-rBeta^all.int #rdist values for every interval
   #now group them into their nodes. some nodes have one value, some are wider intervals and contain many values
   node.rdist <- sapply(2:length(all_depths), function(x){
@@ -86,15 +86,16 @@ write.root.dist<- function(project.path,
   })
   node.rdist <- sapply(node.rdist, sum) #sum all to get one value per row of soil table
   print("write.root.dist: what is origin of rBeta? need ref.")
-  #plot(rdepth_coord, rdist)
+  #plot(all.int[1:length(node.rdist)], node.rdist) #rdist will have length one less than all.int so need to subset for plotting
   rdist <- rev(node.rdist) #highest values at top of soil
-  rdist <- rdist/sum(rdist) #normalize to sum 1
-  rdist_new <- rep(0, num_nodes) #one value for every Node row. default zero roots.
+  #rdist <- rdist/sum(rdist) #normalize to sum 1 - this is not necessary. Hydrus results will be the same if rdist values by layer are 1,1,0,... as it would be with 0.5,0.5,0,...
+  rdist_new <- rep(0, num_nodes) #make full vector. one value for every Node row. default zero roots.
   rdist_new[1:length(rdist)] <- rdist #sub the other values, starting from top
+  #plot(all_depths, rdist_new)
 
   root_dist_fmt = mapply(FUN = format2sci, rdist_new, ndec = 6, power.digits = 3)
 
-  profile_data_new[1:length(root_dist_fmt), 6] = root_dist_fmt
+  profile_data_new[1:length(root_dist_fmt), 6] <- root_dist_fmt
 
   fmt_space = c(5, 15, 15, 5, 5, 15, 15, 15, 15, 15, 15)
   fmt_vec = paste("%", fmt_space, "s", sep = "")

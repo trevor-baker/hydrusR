@@ -4,9 +4,30 @@
 \alias{write.hydraulic.para}
 \title{Write soil hydraulic parameters to selector.in}
 \usage{
-write.hydraulic.para(project.path, model = 0, hysteresis = 0, para, ...)
+write.hydraulic.para(project.path, model = 0, hysteresis = 0, para, vals, ...)
 }
 \arguments{
+\item{project.path}{path to project, where SELECTOR.IN file exists already (e.g. made by create.h1d.project() )}
+
+\item{model}{hydraulic model to use. integer, 0-7. 0 = "van Genuchten (VG)", 1 = "van Genuchten 6 para (VGM)", 2 = "Brooks Corey(BC)", 3 = "mod van Genuchten (VGM2)",
+4 = "Kosugi(KOS)", 5 = "dual Porosity (DUR)", 6 = "dual porosity 2 (DUR2)", 7 = "dual porosity 3 (DUR3)"}
+
+\item{hysteresis}{include hysteresis in simulation? integer. 0 = No, 1 = Yes.}
+
+\item{para}{list of hydraulic parameters, one entry per material. each entry is a named list with all parameters expected by the chosen model. \cr
+0 = c("thr", "ths", "Alfa", "n", "Ks", "l") \cr
+1 = c("thr", "ths", "Alfa", "n", "Ks", "l", "thm", "tha", "thk", "Kk") \cr
+2 = c("thr", "ths", "Alfa", "n", "Ks", "l") \cr
+3 = c("thr", "ths", "Alfa", "n", "Ks", "l") \cr
+4 = c("thr", "ths", "Alfa", "n", "Ks", "l") \cr
+5 = c("thr", "ths", "Alfa", "n", "Ks", "l", "w2", "Alfa2", "n2") \cr
+6 = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "Omega") \cr
+7 = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "AlfaIm", "nIm", "Omega")}
+
+\item{vals}{list of dataframes containing head, K, and theta values. one list entry per material. each entry has a 3 column dataframe in the
+project's length and time units, with names head, k, and theta, giving hydraulic conductivity (k) and volumetric water content (theta) values for
+head values (matric potentials) ranging from 0 to at least 1e5 cm.}
+
 \item{...}{}
 }
 \description{
