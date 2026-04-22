@@ -8,15 +8,22 @@ suppressWarnings(library(data.table))
 suppressWarnings(library(dplyr))
 
 ## Basic inputs
-TimeUnit = "cm" ## Space units
-SpaceUnit = "hours" ## time units
-PrintTimes = 1
+SpaceUnit = "cm" ## Space units
+TimeUnit = "hours" ## time units
+startTime = 0
+endTime = 2400
+time_step = 1
 
+# soil inputs
 profile_depth = 200
 depth.vec = c(0,1,10,50,100,200)
-endTime = 500
+mat.num =   c(1,1, 1, 1,  2,  2)
+head.init = -1
 rdepth = 100
-time_step = 0.25
+rBeta = 0.962
+subregions = seq(10,200,10)
+
+
 
 #one matl
 # soil_para = list(thr = 0.045, ths = 0.43,
@@ -100,64 +107,80 @@ if(const_botbc){
 #### Creates a blank hydrus project with three files: "HYDRUS1D.DAT", "SELECTOR.IN" and "DESCRIPT.TXT"
 create.H1D.project(project.name = project_name,
                    parent.dir = parent_dir,
-                   TimeUnit = TimeUnit,
-                   PrintTimes = PrintTimes,
+                   description = paste("TDB MSc:", project_name),
                    overwrite = T,
                    processes = c(WaterFlow = T, RootWaterUptake = rwu),
+                   units = c(TimeUnit = TimeUnit, SpaceUnit = SpaceUnit),
+                   profile = c(SubregionNumbers = length(subregions)),
+                   setup = c(InitialCondition = 0),
                    geometry = c(ProfileDepth = profile_depth,
                                 NumberOfNodes = length(depth.vec),
                                 ObservationNodes = nObsNodes),
+                   times = list(time.range1 = 0, time.range2 = 2400,
+                                dt = 1e-3, dtMin = 1e-6, dtMax = 1,
+                                DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
+                                print.step = 10),
+                   sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1,
+                              TopInf = TRUE, BotInf = FALSE, WLayer = TRUE,
+                              KodTop = -1, KodBot = -1, InitCond = FALSE,
+                              qGWLF = FALSE, FreeD = TRUE, SeepF = FALSE,
+                              DrainF = FALSE, hSeep = 0),
+                   root = list(model = 0, comp = 1,
+                               P0 = -10, P2H = -200, P2L = -800, P3 = -8000,
+                               POptm = -25, r2H = 0.5, r2L = 0.1,
+                               root_depth = rooting_depth,
+                               rBeta = 0.962),
                    soil.para = soil_para,
                    soil.model = 0,
                    soil.hys = 0,
-                   rwu.stress = c(model = 0, comp = 1,
-                                  P0 = -10, P2H = -200, P2L = -800, P3 = -15291,
-                                  POptm = -25,
-                                  r2H = 0.5, r2L = 0.1))
+                   soil.slope = 0)
 
 ### create the soil profile (PROFILE.DAT) info
 create.soil.profile(project.path = project_path,
                     profile.depth = profile_depth,
-                    depth.vec = c(0,1,10,50,100,200),
-                    mat = c(1,1,1,1,2,2),
-                    head = -2,
+                    depth.vec = depth.vec,
+                    root.depth = rooting_depth,
+                    rBeta = rBeta,
+                    mat = mat.num,
+                    head = head.init,
                     obs.nodes = obs_nodes_all)
 
 
-#set water table
-write.ini.cond(project.path = project_path,
-               wt.depth = NULL) #make sure this fn will work even if set to NULL
+# #set water table - I don't need this for my work
+# write.ini.cond(project.path = project_path,
+#                wt.depth = NULL) #make sure this fn will work even if set to NULL
 
-#write root dist into Beta column - why not just have this and water table above be part of soil.profile fn?
-write.root.dist(project.path = project_path,
-                rdepth = rooting_depth,
-                rBeta = 0.962)
+write.bottom.bc(constant.bc = TRUE,
+                bc.type = bot_bc_type,
+                bc.value = const_botFlux,
+                project.path = project_path)
 
-#this is now in create.H1D.project()
-#write.hydraulic.para(project.path = project_path, para = soil_para)
-
-write.bottom.bc(constant.bc = TRUE, bc.type = bot_bc_type,
-                bc.value = const_botFlux, project.path = project_path)
-
-write.atmosph.in(project.path = project_path, maxAL = 2000, deltaT = time_step,
-                 atm.bc.data = atm_bc_data[1:2000, ])
+write.atmosph.in(project.path = project_path,
+                 maxAL = 2000,
+                 deltaT = time_step,
+                 atm.bc.data = atm_bc_data[1:2000,])
 
 
 #to do:
-# - need a function to set Block B of SELECTOR - MaxIt, TolTh, TolH, and freeD = T (and associ'd settings)
-# - put write.root.dist into create.soi.profile?
-# - understand/edit write.bottom.bc and write.atmosph.in
 # - write a wrapper fn in IEGsoil to contain all of these and transfer the correct data.
 # -- prior to this just test simple loop of 2 simulations.
+#
+#run.H1D questions
+# - understand what beginT, endT, deltaT do
+# -- why aren't these taken from the project files created already?
+# -- are they used only for the print times and the lines of the BC files? or do they control the simulation timesteps?
+# - do bot.bc.type and value need to agree with KodBot etc. in SELECTOR.IN?
 
 
 ##### Default hydrus path in Windows
 
 run.H1D.simulation(project.path = project_path,
                    profile.depth = profile_depth,
-                   beginT = 0, endT = endTime, deltaT = time_step,
-                   bot.bc.type = bot_bc_type, bot.bc.value = const_botFlux,
-                   const.bot.bc = TRUE, atm.bc.data = atm_bc_data,
+                   beginT = startTime, endT = endTime, deltaT = time_step,
+                   bot.bc.type = bot_bc_type,
+                   bot.bc.value = const_botFlux,
+                   const.bot.bc = TRUE,
+                   atm.bc.data = atm_bc_data,
                    TimeUnit = TimeUnit,
                    show.output = T)
 

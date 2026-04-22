@@ -3,9 +3,7 @@
 #' Observation nodes (count and depths of each) are the last two rows of PROFILE.DAT
 #' @param project.path path to the Hydrus project.
 #' @param obs.nodes Observation node depths. Numeric vector. Same length units as the project. Leave NULL if none wanted.
-#'
 #' @export
-#'
 #' @examples \dontrun{
 #' write.obs.nodes(project.path, obs.nodes = c(5, 10, 20, 30)) ## Writes at these depths
 #' write.obs.nodes(project.path) ##

@@ -6,11 +6,7 @@
 #'                   Other options are "h", "theta", "Flux". example, obs.output = c("h", "theta")
 #' @param obs.nodes Numeric Vector of the observation nodes defined in the PROFILE.DAT
 #' @param ...
-#'
-#' @return
 #' @export
-#'
-#' @examples
 
 read.obs_node <-  function(project.path, out.file = "Obs_Node.out",
                            obs.output = NULL, obs.nodes, ...) {

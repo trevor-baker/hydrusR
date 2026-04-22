@@ -1,18 +1,27 @@
-#' Write root distribution in profile.dat
+#' Write root distribution in PROFILE.DAT
 #'
-#' @param project.path
-#' @param rdepth
-#' @param rbeta
-#' @param ...
-#'
-#' @return
+#' Calculate root distribution values to be assigned to soil nodes in PROFILE.DAT. Values must be between 0 and 1, inclusive. The absolute values
+#' of the outputs do not matter, all will be normalized by Hydrus. Values = 0 have zero roots.
+#' @param project.path the Hydrus projet path. where PROFILE.DAT is saved.
+#' @param root.depth the maximum depth of rooting. in same length units as project.
+#' @param rBeta coefficient for defining root distribution. Default = 0.962. Values can be between 0 and 1, but sensible root distributions are
+#' obtained with values ranging from ~0.9 to 0.99 (~linear decrease with depth). Enter 0 if rooting should be the same from 0 to root.depth. The
+#' distribution of roots is calculated with [1-rBeta^d], for d values max(root.depth):min(root.depth), which are assigned in the reverse order to
+#' min(root.depth):max(root.depth). See Example for sample plots showing the effects of rBeta.
 #' @export
-#'
 #' @examples
-write.root.dist<- function(project.path,
-                           rdepth,
-                           rBeta = 0.962,
-                           ...) {
+#' rBeta <- 0.962
+#' root.depth <- 100
+#' root.depths <- seq(0, root.depth, 1)
+#' root.dist <- 1-rBeta^(rev(root.depths))
+#' plot(root.depths, root.dist)
+#' points(root.depths, 1-0.9^(rev(root.depths)), type = "l")
+#' points(root.depths, 1-0.99^(rev(root.depths)), type = "l")
+#' points(root.depths, 1-0^(rev(root.depths)), type = "l")
+
+write.root.dist <- function(project.path,
+                            root.depth,
+                            rBeta = 0.962) {
 
   #read PROFILE.DAT
   file.profile.dat = file.path(project.path, "PROFILE.DAT")
@@ -48,19 +57,19 @@ write.root.dist<- function(project.path,
 
   # #can't use deltaz anymore because thicknesses are allowed flexibility by create.soil.data
   # deltaz = abs(as.numeric(profile_data_new[3, 2]) - as.numeric(profile_data_new[2, 2]))
-  # rdepth_coord = seq(0, rdepth, by = deltaz)
+  # rdepth_coord = seq(0, root.depth, by = deltaz)
 
   #the equivalent to the code above, which gave depth values for all Nodes that fall within the rooting depth is to subset the
   # depth column of profile_data
   all_depths <- -as.numeric(profile_data_new[,2])
-  rdepth_coord <- all_depths[all_depths <= rdepth]
-  if(!any(rdepth_coord == rdepth)){
-    cat("write_root_dist: A row in the soil data should be added at bottom rooting depth, 'rdepth'. See code notes.")
+  rdepth_coord <- all_depths[all_depths <= root.depth]
+  if(!any(rdepth_coord == root.depth)){
+    cat("write_root_dist: A row in the soil data should be added at bottom rooting depth, 'root.depth'. See code notes.")
     #fudge it so that the layer containing the bottom of roots gets rooting assigned.
     # e.g layers at 60-80 and 80-100. rooting depth at 90. without fusging this value, the 80-100 layer would be assigned no roots
-    rdepth_coord <- sort(c(rdepth_coord,rdepth))
+    rdepth_coord <- sort(c(rdepth_coord,root.depth))
   }
-  #it would not be hard to edit the code here to insert a new row at rdepth. would need to copy the correct Node row, and edit the value in
+  #it would not be hard to edit the code here to insert a new row at root.depth. would need to copy the correct Node row, and edit the value in
   # the header that gives num_nodes (add 1)
 
 
@@ -117,7 +126,7 @@ write.root.dist<- function(project.path,
 
 }
 
-# write.root.dist<- function(file.profile.dat, rdepth, rbeta = 0.962, n.nodes, ...) {
+# write.root.dist<- function(file.profile.dat, root.depth, rbeta = 0.962, n.nodes, ...) {
 #
 # profile_dat = readLines(con = file.profile.dat, n = -1L, encoding = "unknown")
 #
@@ -147,7 +156,7 @@ write.root.dist<- function(project.path,
 #       node_data_new = do.call("rbind", node_data_split2)
 #
 #       deltaz = abs(as.numeric(node_data_new[3, 2]) - as.numeric(node_data_new[2, 2]))
-#       rdepth_coord = seq(0, rdepth, by = deltaz)
+#       rdepth_coord = seq(0, root.depth, by = deltaz)
 #
 #       rdist = 1 - rbeta^rdepth_coord
 #

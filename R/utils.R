@@ -5,11 +5,8 @@
 #' @param overwrite Logical, if true overwrites the existing directory, default = T
 #' @param ask Logical, should ask whether to create/delete directories if required, default = FALSE
 #' @param ...
-#'
-#' @return
 #' @export
-#'
-#' @examples
+
 dir.copy<- function(src.dir, dest.dir, overwrite = TRUE, ask = FALSE, ...){
 
       if(!file.exists(src.dir)){
@@ -49,7 +46,7 @@ dir.copy<- function(src.dir, dest.dir, overwrite = TRUE, ask = FALSE, ...){
 #' @title get.decimalplaces
 #' @param x A double numerical
 #' @export
-#' @return
+#' @return integer, the number of dec places
 #' @example
 #' get.decimalplaces(10.343434)
 
@@ -67,7 +64,7 @@ get.decimalplaces <- function(x) {
 #' @param ndec Number of decimal places to apply (e.g, .000xx)
 #' @param power.digits Number of power digits to apply (e.g., e+002)
 #' @param ...
-#' @return
+#' @return a character string of a value formatted to scientific notation
 #' @export
 #' @example
 #' format2sci(120.5, ndec = 5, power.digits = 2)

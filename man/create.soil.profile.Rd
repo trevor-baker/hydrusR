@@ -8,6 +8,8 @@ create.soil.profile(
   project.path,
   out.file = "PROFILE.DAT",
   profile.depth = 100,
+  root.depth = 100,
+  rBeta = 0.962,
   depth.vec = NULL,
   dz = 1,
   mat = 1,
@@ -25,6 +27,14 @@ create.soil.profile(
 \item{out.file}{Default is always 'PROFILE.DAT'}
 
 \item{profile.depth}{total profile depth. numeric, length = 1. positive value. in same length units as project.}
+
+\item{root.depth}{rooting depth. numeric, length = 1. positive value. in same length units as project. Roots will be assigned between surface
+(depth = 0) and this depth, at a density set by rBeta. see ?hydrusR::write.root.dist for details.}
+
+\item{rBeta}{coefficient for defining root distribution. Default = 0.962. Values can be between 0 and 1, but sensible root distributions are
+obtained with values ranging from ~0.9 to 0.99 (~linear decrease with depth). Enter 0 if rooting should be the same from 0 to root.depth. The
+distribution of roots is calculated with [1-rBeta^d], for d values max(root.depth):min(root.depth), which are assigned in the reverse order to
+min(root.depth):max(root.depth). See ?hydrusR::write.root.dist for example plots.}
 
 \item{depth.vec}{the depths of discrete layers within the soil profile. numeric, any length. in same length units as project. must span from
 0 for profile upper boundary to the value given in profile.depth for the lower boundary. positive values. if this is not given, then the soil
@@ -58,4 +68,7 @@ as depth.vec, one Conc value per layer. If not doing solute modelling, the Conc 
 }
 \description{
 Creates a new PROFILE.DAT file using a template included in the package.
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 }

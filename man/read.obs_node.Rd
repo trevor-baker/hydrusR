@@ -21,8 +21,6 @@ read.obs_node(
 Other options are "h", "theta", "Flux". example, obs.output = c("h", "theta")}
 
 \item{obs.nodes}{Numeric Vector of the observation nodes defined in the PROFILE.DAT}
-
-\item{...}{}
 }
 \description{
 Read observation point outputs

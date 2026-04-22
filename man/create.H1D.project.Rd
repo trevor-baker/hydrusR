@@ -8,15 +8,24 @@ create.H1D.project(
   project.name,
   parent.dir,
   description = NULL,
-  TimeUnit = "days",
-  SpaceUnit = "cm",
-  PrintTimes = 1,
   processes = c(WaterFlow = T, RootWaterUptake = F),
-  geometry,
+  units = c(TimeUnit = "days", SpaceUnit = "cm"),
+  profile = c(SubregionNumbers = 1),
+  solutes,
+  setup = c(PrintTimes = -999, InitialCondition = 0),
+  geometry = c(ProfileDepth = 200, NumberOfNodes = 4, ObservationNodes = 0),
+  grid,
+  times = list(time.range1 = 0, time.range2 = 2400, dt = 0.001, dtMin = 1e-06, dtMax = 1,
+    DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7, print.step = 10),
+  sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1, TopInf = TRUE, BotInf = FALSE, WLayer
+    = TRUE, KodTop = -1, KodBot = -1, InitCond = FALSE, qGWLF = FALSE, FreeD = TRUE,
+    SeepF = FALSE, DrainF = FALSE, hSeep = 0),
+  root = list(model = 0, comp = 1, P0 = -10, P2H = -200, P2L = -800, P3 = -8000, POptm =
+    -25, r2H = 0.5, r2L = 0.1),
   soil.para,
-  soil.model,
-  soil.hys,
-  initial.cond,
+  soil.model = 0,
+  soil.hys = 0,
+  soil.slope = 0,
   overwrite = FALSE,
   ...
 )
@@ -24,17 +33,44 @@ create.H1D.project(
 \arguments{
 \item{project.name}{Name of the project}
 
-\item{parent.dir}{Path to the project folder, where a folder with project.name will be saved}
+\item{parent.dir}{Path to the project folder, where a folder with project.name will be saved.}
 
-\item{TimeUnit}{Simulation time unit information (default = days). permitted: seconds, minutes, hours, days, years.}
+\item{processes}{named vector, logical. Denotes the main processes to be simulated: "WaterFlow", "SoluteTransport",
+"HeatTransport", "CO2Transport", "EquilibriumAdsorption", "RootWaterUptake", "RootGrowth", "Unsatchem", "HP1". Documented in Hydrus manual,
+Table B.5. All should be FALSE except WaterFlow and, depending on your use, RootWaterUptake. Only the TRUE elements need to be listed, all others are
+assumed to be FALSE. These are assigned to the Main section of HYDRUS1D.DAT.}
 
-\item{SpaceUnit}{Vertical spatial unit (decault = cm). permitted: mm, cm, m}
+\item{units}{named vector giving units for this project, length = 2 (TimeUnit, SpaceUnit), each is a character string.  These are assigned to the
+Main section of HYDRUS1D.DAT. \cr
+TimeUnit: simulation time unit information (default = "days"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+SpaceUnit: vertical spatial unit (decault = "cm"). permitted: "mm", "cm", "m".}
 
-\item{PrintTimes}{Time levels at which the outputs should be printed. These are the times that willbe output in the Nod_Inf.out file among others.}
+\item{profile}{information about the soil profile. Named vector "SubregionNumbers", value is integer length = 1, telling how many subregions for
+mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT.}
 
-\item{processes}{Main processes (e.g., WaterFlow, SoluteTransport etc) to be simulated}
+\item{solutes}{Named vector. Not currently set up for solute simulations. This argument can be omitted and defaults will be set without soute modelling.
+vector names: "NumberOfSolutes", "MobileImmobile", "SolutionConc", "AdsorbedConc", "PrecipConc".  These are assigned to the Main section of HYDRUS1D.DAT.}
 
-\item{geometry}{Profile geometry info (Depth, # of nodes and # of obs nodes)}
+\item{setup}{Named vector, each is integer. These are assigned to the Main section of HYDRUS1D.DAT. These can be omitted and PrintTimes will be
+calculated from times[["time.range"]] and times[["print.step"]], while InitialCondition's default of 0 (pressure head) will be assumed \cr
+PrintTimes = how many times will results be printed to output files such as Nod_Inf.OUT? \cr
+InitialCondition = 0 or 1. Whether the water flow initial condition is specified in terms of pressure heads (0) or water contents (1).}
+
+\item{geometry}{Profile geometry info. Named vector: ProfileDepth, NumberOfNodes (number of discrete layers, i.e. rows in PROFILE.DAT),
+ObservationNodes (number of obs nodes). These are assigned to the Profile section of HYDRUS1D.DAT.}
+
+\item{grid}{Named vector. Not used. These seem to be Hydrus GUI settings. This argument can be omitted. Vector names: "GridVisible", "SnapToGrid",
+"ProfileWidth","LeftMargin","GridOrgX","GridOrgY","GridDX","GridDY". These would be assigned to the Profile section of HYDRUS1D.DAT.}
+
+\item{times}{Time settings. Named list: time.range1, time.range2, dt, dtMin, dtMax, DMul1, DMul2, ItRange1, ItRange2, print.step. See
+?hydrusR::write.time.settings for details. These are the settings from the GUI sections for Time Information-Time Discretization and Water Flow-Iteration
+Criteria. These control iterations, time steps, run times, etc, and get written to Block C of SELECTOR.IN.}
+
+\item{sim}{simulation settings. Named list: MaxIt, TolTh, TolH, TopInf, BotInf, WLayer, KodTop, KodBot, InitCond, qGWLF, FreeD, SeepF,
+DrainF, hSeep. See ?hydrusR::write.sim.settings for details.}
+
+\item{root}{Root water uptake stress parameters. Named list: model, comp, P0, P2H, P2L, P3, POptm, r2H, r2L. See ?hydrusR::write.rwu.stress for
+details.}
 
 \item{soil.para}{List of soil hydraulic parameters, one entry per material to be included in simulation. See ?hydrusR::write.hydraulic.para for details.}
 
@@ -42,20 +78,39 @@ create.H1D.project(
 
 \item{soil.hys}{include hysteresis in simulation? integer. 0 = No, 1 = Yes.}
 
+\item{soil.slope}{numeric, length = 1. slope angle in degrees.}
+
 \item{overwrite}{if TRUE, function will not ask to overwrite the project if it already exists. careful.}
+
+\item{soil.sub}{integer, length = 1. how many subregions (aka "Lay" in PROFILE.DAT) does this profile have? the number of subregions for
+mass balance calculations.}
 }
 \description{
 Creates a new hydrus project folder with "HYDRUS1D.DAT", "SELECTOR.IN" and "DESCRIPT.TXT" files
 }
 \examples{
-
-create.H1D.project(project.name = "testproj2", parent.dir = parent_dir, discription = NULL,
-                   SpaceUnit = "cm", TimeUnit = "days", PrintTimes = 1,
+#'
+create.H1D.project(project.name = "testproj2", parent.dir = parent_dir, description = NULL,
                    processes = c(WaterFlow = T, SoluteTransport = F, RootWaterUptake = F,
-                   RootGrowth = F, Unsatchem = F, HP1 = F, EquillibriumAdsorption = F),
-                   initial.cond = c(NumberOfSolutes = 0, InitialCondition = 0),
+                                 RootGrowth = F, Unsatchem = F, HP1 = F, EquilibriumAdsorption = F),
+                   units = c(SpaceUnit = "cm", TimeUnit = "days"),
+                   profile = c(SubregionNumbers = 1),
+                   setup = c(PrintTimes = 1, InitialCondition = 0),
                    geometry = c(ProfileDepth = 200, NumberOfNodes = 4,
-                                ObservationNodes = 0, MaterialNumber = 1, SubregionNumber = 1))
+                                ObservationNodes = 0),
+                   times = list(time.range1 = 0, time.range2 = 2400,
+                                dt = 1e-3, dtMin = 1e-6, dtMax = 1,
+                                DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
+                                print.step = 10),
+                   soil.para = soil_para, #vG params created prior
+                   soil.model = 0, soil.hys = 0, soil.slope = 0,
+                   root = list(model = 0, comp = 1, P0 = -10, P2H = -200, P2L = -800, P3 = -8000,
+                               POptm = -25, r2H = 0.5, r2L = 0.1),
+                   sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1,
+                              TopInf = TRUE, BotInf = FALSE, WLayer = TRUE,
+                              KodTop = -1, KodBot = -1, InitCond = FALSE,
+                              qGWLF = FALSE, FreeD = TRUE, SeepF = FALSE,
+                              DrainF = FALSE, hSeep = 0))
 }
 \author{
 Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>

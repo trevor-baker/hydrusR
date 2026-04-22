@@ -2,13 +2,25 @@
 % Please edit documentation in R/write_bottom_bc.R
 \name{write.bottom.bc}
 \alias{write.bottom.bc}
-\title{Write bottom Boundary Condition}
+\title{Write bottom boundary conditions}
 \usage{
-write.bottom.bc(constant.bc, bc.type, bc.value, project.path, ...)
+write.bottom.bc(project.path, constant.bc, bc.type, bc.value)
 }
 \arguments{
-\item{...}{}
+\item{project.path}{path to the Hydrus project. where SELECTOR.IN file is saved.}
+
+\item{constant.bc}{logical, length = 1. is this a time-variable (FALSE) or constant boundary (TRUE) condition? If this is a variable condition, then
+additional data will need to be prepared for ATMOSPH.IN by write.atmopsh.in(). If this is a constant boundary condition, then no ATMOSPH.IN data needs
+to be set.}
+
+\item{bc.type}{character, length = 1. "flux" or "head". what type of boundary condition is being set?}
+
+\item{bc.value}{numeric, length = 1. the value to be set for a constant flux bottom condition, in project length/time units. Does not need to be
+specified for constant head conditions because the Head value of the bottom Node in PROFILE.DAT will be used.}
 }
 \description{
-Write bottom Boundary Condition
+Write bottom boundary conditions
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 }

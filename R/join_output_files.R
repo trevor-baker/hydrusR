@@ -3,11 +3,7 @@
 #' @param project.path Path of the hydrus project
 #' @param out.files.path Directory of output files. Default is 'defaults' which = project.path
 #' @param ...
-#'
-#' @return
 #' @export
-#'
-#' @examples
 
 join.output.files<- function(project.path, out.files.path = "default", ...) {
 

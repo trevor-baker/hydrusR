@@ -5,11 +5,8 @@
 #' @param output
 #' @param warn
 #' @param ...
-#'
-#' @return
 #' @export
-#'
-#' @examples
+
 read.tlevel.out<- function(project.path, out.file = "T_Level.out", output = NULL,
          warn = FALSE, ...){
 

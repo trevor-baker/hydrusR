@@ -2,10 +2,7 @@
 #'
 #' @param pet.daily numeric vector of daily PET values in same length units as project. i.e., must convert mm PET to cm if your project is in cm.
 #' @param hours hours of day that will have non-zero ET. numeric vector, not a range. i.e., 6:20 not c(6,20)
-#'
-#' @return
 #' @export
-#'
 #' @examples
 #' pet.val <- pet.hourly(pet.daily = c(1,2,4), hours = 6:20)
 #' plot(pet.val) #show the daily totoals broken into hourly with diurnal variation

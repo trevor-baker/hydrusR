@@ -12,9 +12,6 @@ read.tlevel.out(
   ...
 )
 }
-\arguments{
-\item{...}{}
-}
 \description{
 READ outputs of TLEVEL.OUT
 }

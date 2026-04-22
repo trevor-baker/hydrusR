@@ -5,11 +5,8 @@
 #' @param print.stats
 #' @param plot
 #' @param ...
-#'
-#' @return
 #' @export
-#'
-#' @examples
+
 model.eval<- function(data, var.name = "",  print.stats = TRUE, plot = FALSE, ...){
    if(plot == TRUE) {
           plot(data$obs, data$pred, type = "p", xlim = range(data$pred),

@@ -2,21 +2,20 @@
 % Please edit documentation in R/write_print_times.R
 \name{write.print.times}
 \alias{write.print.times}
-\title{Write print times in SELECTOR.IN}
+\title{Update print times, MPL, tInit, and tMax in SELECTOR.IN}
 \usage{
-write.print.times(project.path, tmin, tmax, tstep, TimeUnit, ...)
+write.print.times(project.path, tmin, tmax, print.step, ...)
 }
 \arguments{
 \item{project.path}{Location of the H1D project in the directory}
 
-\item{tmin}{Begining print time (e.g., 1)}
+\item{tmin, tmax}{Numeric, length = 1. Beginning and ending times of this simulation, in this project's time units. tmin will not have results printed, the first
+print will be at tmin+print.step, and then at every print.step until tmax, i.e. seq(tmin+print.step, tmax, print.step). tmin does not need to be 0,
+it can be any value.}
 
-\item{tmax}{End print time (e.g. 240 hours)}
-
-\item{tstep}{Time step to print out put at}
-
-\item{...}{}
+\item{print.step}{Numeric, length = 1. Time interval to print at, in this project's time units. This would be set in Hydrus GUI in Print Information-Print at Regular Time Interval}
 }
 \description{
-Write print times in SELECTOR.IN
+This function has two uses. To create a properly formatted TPrint block for SELECTOR.IN containing all times that values will be printed (e.g., to
+"Nod_Inf.OUT"), and, for use in hydrusR's looping of long simulations, to replace the time range and MPL values for each successive loop's input file.
 }

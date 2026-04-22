@@ -2,11 +2,8 @@
 #'
 #' @param tlevel.out
 #' @param profile.depth
-#'
-#' @return
 #' @export
-#'
-#' @examples
+
 get.water.table<- function(tlevel.out, profile.depth) {
       Tlevel<- read.table(file = tlevel.out,
                           header = T, sep = "", dec = ".",

@@ -58,8 +58,8 @@ write.time.settings <- function(project.path,
 
   #this line is where values for time settings are declared
   para_line_ind1 = grep("dt", this_block)+1 #the line below the one with param names
-  para_name_fmt_vec1 = c("%12s", "%13s", "%12s", "%8s", "%8s", "%6s", "%6s", "%6s") #spacing format
-  MPL <- floor(time.range/print.step) #how many times will results be printed
+  para_name_fmt_vec1 = c("%12s", "%13s", "%12s", "%8s", "%8s", "%6s", "%6s", "%6s", "%6s") #spacing format
+  MPL <- floor(diff(time.range)/print.step) #how many times will results be printed
   para_values1 <- c(dt, dtMin, dtMax, max(DMul), min(DMul), min(ItRange), max(ItRange), MPL)
   para_values1[1:3] <- format2sci(para_values1[1:3], ndec = 3, power.digits = 3) #put these in Hydrus sci notation
   para_line_fmt1 = mapply(FUN = sprintf, para_values1, fmt = para_name_fmt_vec1[1:length(para_values1)]) #format the param names

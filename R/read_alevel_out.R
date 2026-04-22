@@ -5,11 +5,8 @@
 #' @param output vector of output names that should be read
 #' @param warn Logical for displaying/suppressing warnings producted by data.table::fread()
 #' @param ...
-#'
-#' @return
 #' @export
-#'
-#' @examples
+
 read.alevel.out<- function(project.path, out.file = "A_Level.out", output = NULL, warn = FALSE, ...) {
 
   if(is.null(output) | missing(output)) {

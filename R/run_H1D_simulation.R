@@ -17,8 +17,6 @@
 #' @param show.output Logical, whether the shell output of HYDRUS1D run should be displayed on R console, default = F
 #' @import data.table
 #' @export
-#'
-#' @examples
 
 run.H1D.simulation = function(project.path, hydrus.path = NULL, profile.depth,
                               beginT, endT, deltaT, bot.bc.type, bot.bc.value, const.bot.bc,

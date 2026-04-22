@@ -3,6 +3,12 @@
 #' @param project.path Location of the H1D project in the directory
 #' @param out.file Default is always 'PROFILE.DAT'
 #' @param profile.depth total profile depth. numeric, length = 1. positive value. in same length units as project.
+#' @param root.depth rooting depth. numeric, length = 1. positive value. in same length units as project. Roots will be assigned between surface
+#' (depth = 0) and this depth, at a density set by rBeta. see ?hydrusR::write.root.dist for details.
+#' @param rBeta coefficient for defining root distribution. Default = 0.962. Values can be between 0 and 1, but sensible root distributions are
+#' obtained with values ranging from ~0.9 to 0.99 (~linear decrease with depth). Enter 0 if rooting should be the same from 0 to root.depth. The
+#' distribution of roots is calculated with [1-rBeta^d], for d values max(root.depth):min(root.depth), which are assigned in the reverse order to
+#' min(root.depth):max(root.depth). See ?hydrusR::write.root.dist for example plots.
 #' @param depth.vec the depths of discrete layers within the soil profile. numeric, any length. in same length units as project. must span from
 #' 0 for profile upper boundary to the value given in profile.depth for the lower boundary. positive values. if this is not given, then the soil
 #' profile will be split into layers of dz length.
@@ -25,23 +31,22 @@
 #' as depth.vec, one Temp value per layer.
 #' @param Conc Concentration in initial profile. if length = 1, it will be replicated for every layer. if length > 1, then it must be same length
 #' as depth.vec, one Conc value per layer. If not doing solute modelling, the Conc value will have no effect and can be left as default.
-#'
-#' @return
+#' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 #' @export
-#'
-#' @examples
 
 create.soil.profile <- function(project.path,
-                                 out.file = "PROFILE.DAT",
-                                 profile.depth = 100,
-                                 depth.vec = NULL,
-                                 dz = 1,
-                                 mat = 1,
-                                 lyr = NULL,
-                                 Head = -0.1,
-                                 Temp = 20,
-                                 Conc = 0,
-                                 obs.nodes = NULL, ...) {
+                                out.file = "PROFILE.DAT",
+                                profile.depth = 100,
+                                root.depth = 100,
+                                rBeta = 0.962,
+                                depth.vec = NULL,
+                                dz = 1,
+                                mat = 1,
+                                lyr = NULL,
+                                Head = -0.1,
+                                Temp = 20,
+                                Conc = 0,
+                                obs.nodes = NULL, ...) {
 
   #PROFILE.DAT columns:
   # - column 1, unnamed in PROFILE.DAT, z [L]: z-coordinate of node n [L] (depth).
@@ -197,20 +202,31 @@ create.soil.profile <- function(project.path,
 
   profile_file = file.path(project.path, out.file)
 
-  #write PROFILE.DAT, which may be modified below by write.obs.nodes
+  #write PROFILE.DAT, which may be modified below by subsequent functions
   write(profile_data_new, file = profile_file, append = FALSE)
+
+
+  #Run modifying functions
+  ########################
 
   #add observation node info, if there are any
   if(!is.null(obs.nodes)) write.obs.nodes(project.path, obs.nodes)
   print("PROFILE: what are obs.nodes?")
 
-  #add Subregion count to HYDRUS1D.DAT file
-  h1d_path = file.path(project.path, "HYDRUS1D.DAT")
-  h1d_dat = readLines(h1d_path, n = -1L, encoding = "unknown")
-  h1d_indx <- which(grepl("SubregionNumbers", h1d_dat))
-  h1d_sr <- paste0("SubregionNumbers=",length(unique(lyr)))
-  h1d_dat[h1d_indx] <- h1d_sr
-  write(h1d_dat, file = h1d_path, append = FALSE)
+  # ##this is now done in create.H1D.project with all other HYDRUS1D.DAT edits.
+  # #add Subregion count to HYDRUS1D.DAT file
+  # h1d_path = file.path(project.path, "HYDRUS1D.DAT")
+  # h1d_dat = readLines(h1d_path, n = -1L, encoding = "unknown")
+  # h1d_indx <- which(grepl("SubregionNumbers", h1d_dat))
+  # h1d_sr <- paste0("SubregionNumbers=",length(unique(lyr)))
+  # h1d_dat[h1d_indx] <- h1d_sr
+  # write(h1d_dat, file = h1d_path, append = FALSE)
+
+  #edit rooting profile (Beta column)
+  write.root.dist(project.path = project.path,
+                  root.depth = root.depth,
+                  rBeta = rBeta)
+
 
 } #end fn
 

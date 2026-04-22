@@ -6,9 +6,6 @@
 \usage{
 model.eval(data, var.name = "", print.stats = TRUE, plot = FALSE, ...)
 }
-\arguments{
-\item{...}{}
-}
 \description{
 Calculate RMSE and Nash-Sutcliffe CEFF of the simulation
 }

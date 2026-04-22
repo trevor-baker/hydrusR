@@ -20,8 +20,6 @@ read.alevel.out(
 \item{output}{vector of output names that should be read}
 
 \item{warn}{Logical for displaying/suppressing warnings producted by data.table::fread()}
-
-\item{...}{}
 }
 \description{
 Read outputs of ALEVEL.OUT

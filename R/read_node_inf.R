@@ -10,8 +10,6 @@
 #' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 #' @return data.table of Nod_Inf.out results for all timesteps.
 #' @export
-#'
-#' @examples
 
 read.nod_inf<- function(project.path,
                         out.file = "Nod_Inf.out",

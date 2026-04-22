@@ -2,13 +2,31 @@
 % Please edit documentation in R/write_root_dist.R
 \name{write.root.dist}
 \alias{write.root.dist}
-\title{Write root distribution in profile.dat}
+\title{Write root distribution in PROFILE.DAT}
 \usage{
-write.root.dist(project.path, rdepth, rBeta = 0.962, ...)
+write.root.dist(project.path, root.depth, rBeta = 0.962)
 }
 \arguments{
-\item{...}{}
+\item{project.path}{the Hydrus projet path. where PROFILE.DAT is saved.}
+
+\item{root.depth}{the maximum depth of rooting. in same length units as project.}
+
+\item{rBeta}{coefficient for defining root distribution. Default = 0.962. Values can be between 0 and 1, but sensible root distributions are
+obtained with values ranging from ~0.9 to 0.99 (~linear decrease with depth). Enter 0 if rooting should be the same from 0 to root.depth. The
+distribution of roots is calculated with [1-rBeta^d], for d values max(root.depth):min(root.depth), which are assigned in the reverse order to
+min(root.depth):max(root.depth). See Example for sample plots showing the effects of rBeta.}
 }
 \description{
-Write root distribution in profile.dat
+Calculate root distribution values to be assigned to soil nodes in PROFILE.DAT. Values must be between 0 and 1, inclusive. The absolute values
+of the outputs do not matter, all will be normalized by Hydrus. Values = 0 have zero roots.
+}
+\examples{
+rBeta <- 0.962
+root.depth <- 100
+root.depths <- seq(0, root.depth, 1)
+root.dist <- 1-rBeta^(rev(root.depths))
+plot(root.depths, root.dist)
+points(root.depths, 1-0.9^(rev(root.depths)), type = "l")
+points(root.depths, 1-0.99^(rev(root.depths)), type = "l")
+points(root.depths, 1-0^(rev(root.depths)), type = "l")
 }
