@@ -47,8 +47,8 @@ create.bc <- function(project.path,
                       top.bc.type = NULL,
                       top.bc.value = NULL,
                       freeD = TRUE,
-                      top.bc.type = NULL,
-                      top.bc.value = NULL,
+                      bot.bc.type = NULL,
+                      bot.bc.value = NULL,
                       hCritA = NULL, ...){
 
 
@@ -65,8 +65,8 @@ create.bc <- function(project.path,
   time_dat <- sel.in[time_line+1]
   time_dat <- strsplit(time_dat, " ")[[1]]
   time_dat <- time_dat[-which(time_dat == "")]
-  t0 <- as.nuemric(time_dat[1])
-  t1 <- as.nuemric(time_dat[2])
+  t0 <- as.numeric(time_dat[1])
+  t1 <- as.numeric(time_dat[2])
 
   #End section to get SELECTOR.IN info
   ####
@@ -88,7 +88,7 @@ create.bc <- function(project.path,
       #cap the maximum time
       if(max(atmos.df$time) > t1){
         print("atmos.df needed to be cut off at the end time defined in SELECTOR.IN (tMax). Double check your data.")
-        if(all(atmos.df$time) > t1){ #if all are higher, then keep only last row
+        if(all(atmos.df$time > t1)){ #if all are higher, then keep only last row
           atmos.df <- atmos.df[nrow(atmos.df),]
           atmos.df$time <- t1
         } else {
@@ -240,12 +240,9 @@ create.bc <- function(project.path,
       } else if(l.unit == "m"){ 1e5/100 }
   }
 
-
   # end clean arguments section
   ####
 
-
-  print("create.bc: set codes Kod Bot KodTop")
 
   ###
   # prepare dataframe to become ATMOSPH.IN
@@ -260,11 +257,14 @@ create.bc <- function(project.path,
     #in this section I will make a dataframe called df.var that holds any variable BCs
 
     #there are two main paths, depending on atmos
-    # if atmos=T, then either it is simply passed on its own (because bot.bc is not variable), or it is combined with bot.bc
     if(atmos){
+
+      # if atmos=T, then either it is simply passed on its own (because bot.bc is not variable), or it is combined with bot.bc
       if(bot.bc.type %in% c("vh","vf")){
 
-        df.var <- dplyr::full_join(atmos.df, bot.bc.value)
+        df.var <- dplyr::full_join(atmos.df,
+                                   bot.bc.value,
+                                   by = "time")
 
         #this needs some work if timesteps don't match.
         # if not matching then the join will induce NAs, which means that the next value needs to be carried upward to fill.
@@ -283,34 +283,71 @@ create.bc <- function(project.path,
     } else {
       #else !atmos, which means that either top.bc or bot.bc are passed on their own (if only one of them is variable), or they are combined because
       # both are variable.
-    }
+
+      v.type <- which(sapply(c(bot.bc.type, top.bc.type), function(x){ grepl("v", x) }))
+      if(length(v.type) == 2){
+
+        df.var <- dplyr::full_join(bot.bc.value,
+                                   top.bc.value,
+                                   by = "time")
+
+        #fill NAs if timesteps don't match.
+        # if not matching then the join will induce NAs, which means that the next value needs to be carried upward to fill.
+        # value carried upward because a value given at a particular timestep covers all previous times after the last given value.
+        #there will never be a missing value at the end of the dataframe because the data checks to start the fn ensure that the
+        # final row in both is at time = t1
+        df.var <- df.var %>% tidyr::fill(tidyr::everything(),
+                                         .direction = "up")
+
+      } else {
+        if(v.type == 1){ #then it is bottom only
+
+          df.var <- bot.bc.value
+
+        } else { #else it is top only
+
+          df.var <- top.bc.value
+
+        } #end else
+      } #end else only one type
+    } #end else, !atmos
 
     #some formatting applies, no matter the source dataframes
     # - time column is always named tAtm
     df.var <- df.var %>% dplyr::rename(tAtm = time)
-    # - hCritA is always given in this data.frame, and this function as currently coded does not allow it to vary by time
-    df.var$hCritA <- hCritA #same value for all times
+    # - if this dataframe exists, hCritA seems to always be part of it
+    df.var$hCritA <- hCritA #same value for all times, as currently coded does not allow it to vary
     # - only permitted columns are allowed
     df.var <- df.var %>%
       dplyr::select(dplyr::any_of(c("tAtm", "Prec", "rSoil", "rRoot", "hT", "hB", "rB", "hCritA")))
 
 
-    #left off here
-    # - now pass this to write.atmosph fn
-    #
+
+    #pass this to fn to write the file
+    write.atmosph.in(project.path = project.path,
+                     atm.bc.data = df.var,
+                     hCritS = hCritS)
     # also need to pass correct kodes etc to SELECTOR
     # need to put comments in run.H1D.sim that it isn't set up, and that any sim with less than 960 print times and variable BC times
     #   should be run directly. otherwise fn needw work. specific work required are to override the flat deltaT. and that requires some way of saving
     #   the initial too-long versions of ATMOSPH and SELECTOR PrintTimes so that their irregular interval times can be pulled into the correct iteration.
 
 
-
-
   } #end if section around making ATMOSPH.IN
 
 
+  #write the other boundary conditions, which is done whether they are variable or not
+  # therefore all flux types are run through here.
+  write.bc.top(project.path,
+               atmos = atmos,
+               constant.bc = top.bc.type %in% c("cf","ch"),
+               bc.type = ifelse(top.bc.type %in% c("cf", "vf", "atmos"), "flux", "head"),
+               bc.value = ifelse(is.vector(top.bc.value), top.bc.value, ""))
 
+  write.bc.bottom(project.path,
+                  freeD = freeD,
+                  constant.bc = bot.bc.type %in% c("cf","ch"),
+                  bc.type = ifelse(bot.bc.type %in% c("cf", "vf"), "flux", "head"),
+                  bc.value = ifelse(is.vector(bot.bc.value), bot.bc.value, ""))
 
-
-
-}
+} #end fn

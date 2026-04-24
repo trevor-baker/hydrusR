@@ -155,21 +155,43 @@ create.soil.profile(project.path = project_path,
 # write.ini.cond(project.path = project_path,
 #                wt.depth = NULL) #make sure this fn will work even if set to NULL
 
-write.bottom.bc(constant.bc = TRUE,
-                bc.type = bot_bc_type,
-                bc.value = const_botFlux,
-                project.path = project_path)
+df.atm <- data.frame(time = c(1200,2400),
+                     Prec = c(0, 0.01),
+                     ET = 0.1)
 
-write.atmosph.in(project.path = project_path,
-                 maxAL = 2000,
-                 deltaT = time_step,
-                 atm.bc.data = atm_bc_data[1:2000,])
+create.bc(project.path,
+          atmos = TRUE,
+          atmos.df = df.atm,
+          hCritS = 0,
+          top.bc.type = NULL,
+          top.bc.value = NULL,
+          freeD = TRUE,
+          bot.bc.type = NULL,
+          bot.bc.value = NULL)
+
+# write.bottom.bc(constant.bc = TRUE,
+#                 bc.type = bot_bc_type,
+#                 bc.value = const_botFlux,
+#                 project.path = project_path)
+#
+# write.atmosph.in(project.path = project_path,
+#                  maxAL = 2000,
+#                  deltaT = time_step,
+#                  atm.bc.data = atm_bc_data[1:2000,])
 
 
 #to do:
 # - write a wrapper fn in IEGsoil to contain all of these and transfer the correct data.
 # -- prior to this just test simple loop of 2 simulations.
+# -- prior to this, try to simply replicate a freeD profile with no ATMOS data, then with constant (then variable) ATMOS data.
+# --- replicate the data prep, and then check results against GUI version of saem setup.
+# --- would be nice to test others, but I know all my work in near future will be freeD with and without Prec and ET.
+# - write a prep.climate data fn.
+# -- simple. just to hold the horly_et fn and do a few minor steps.
 #
+#
+#
+
 #run.H1D questions
 # - understand what beginT, endT, deltaT do
 # -- why aren't these taken from the project files created already?

@@ -1,6 +1,7 @@
-#' Write bottom boundary conditions
+#' Writes codes for bottom boundary conditions to SELECTOR.IN
 #'
 #' @param project.path path to the Hydrus project. where SELECTOR.IN file is saved.
+#' @param freeD logical. is this a free-draining profile. i.e. untiy gradient at bottom.
 #' @param constant.bc logical, length = 1. is this a time-variable (FALSE) or constant boundary (TRUE) condition? If this is a variable condition, then
 #' additional data will need to be prepared for ATMOSPH.IN by write.atmopsh.in(). If this is a constant boundary condition, then no ATMOSPH.IN data needs
 #' to be set.
@@ -10,10 +11,16 @@
 #' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 #' @export
 
-write.bottom.bc <- function(project.path,
+write.bc.bottom <- function(project.path,
+                            freeD = freeD,
                             constant.bc,
                             bc.type,
                             bc.value) {
+
+
+  if(bc.value == ""){
+    bc.value <- NULL
+  }
 
   ## Writes bottom constant boundary conditions "flux" or "head"
   input_data = readLines(con = file.path(project.path, "SELECTOR.IN"),
@@ -44,7 +51,7 @@ write.bottom.bc <- function(project.path,
       #               +3 = variable bottom head; -3 = variable bottom flux
 
       #format the spacing and paste back together into one line
-      botInf_input_fmt = sprintf(fmt = botInf_fmt_vec, botInf_input_split)
+      botInf_input_fmt = sprintf(fmt = botInf_fmt_vec[1:length(botInf_input_split)], botInf_input_split)
       botInf_input_new = paste(botInf_input_fmt, collapse = "")
 
       #another row needs to be added where the flux rate is defined in rBot
@@ -85,21 +92,21 @@ write.bottom.bc <- function(project.path,
       #KodBot values: +1 = constant bottom head; -1 = constant bottom flux;
       #               +3 = variable bottom head; -3 = variable bottom flux
 
-      botInf_input_fmt = sprintf(fmt = botInf_fmt_vec, botInf_input_split)
+      botInf_input_fmt = sprintf(fmt = botInf_fmt_vec[1:length(botInf_input_split)], botInf_input_split)
       botInf_input_new = paste(botInf_input_fmt, collapse = "")
 
       flow_block_new = c(flow_block[1:botInf_ind],
                          botInf_input_new,
                          flow_block[hTab1_ind:length(flow_block)])
 
-      cat("Time-variable bottom flux 'rB' must be specified in the ATMOSPH.IN table ")
+      cat("Time-variable bottom flux must be specified in the ATMOSPH.IN table.\n ")
 
     } #end else
   } #end if flux type
   ######################################
 
   if(bc.type == "head"){
-    if(isTRUE(constant.bc)) {
+    if(isTRUE(constant.bc)){
 
       botInf_input_split[1] = 'f' #this is BotInf. TRUE would mean a time-dependent boundary condition is to be imposed at
       #                             the top/bottom of the profile, for which data would be supplied via input file ATMOSPH.IN (created
@@ -121,17 +128,31 @@ write.bottom.bc <- function(project.path,
       #KodBot values: +1 = constant bottom head; -1 = constant bottom flux;
       #               +3 = variable bottom head; -3 = variable bottom flux
 
-      cat("Time-variable bottom head 'hB' must be specified in the ATMOSPH.IN table.")
+      #for reasons unknown, if the profile is free-draining, even though this is a variable head condition
+      # - variable because the head at the bottom changes to match the pressur ehead of the lowermost layer
+      # - head because it is the head that changes to match the lower layer to maintain the unity gradient.
+      #however, Hydrus sets the values for freeD to f and -1, as though it were a constant flux. I need to just follow along:
+      if(freeD){
+        botInf_input_split[1] = 'f' #because Hydrus says so if this is freeD=TRUE.
+        botInf_input_split[5] = '-1'
+      } else {
+        #else remind user
+        # - this might not be nesscary because the etensive checks in create.bc might prevent a case where hB values weren't making
+        #     it into ATMOSPH.IN
+        cat("Time-variable bottom head must be specified in the ATMOSPH.IN table.\n")
+      }
+
+
 
     } #end else
 
-    botInf_input_fmt = sprintf(fmt = botInf_fmt_vec, botInf_input_split)
+    botInf_input_fmt = sprintf(fmt = botInf_fmt_vec[1:length(botInf_input_split)], botInf_input_split)
     botInf_input_new = paste(botInf_input_fmt, collapse = "")
 
     #piece together the new flow block
     flow_block_new = c(flow_block[1:botInf_ind],
                        botInf_input_new,
-                       flow_block[hTab1:length(flow_block)])
+                       flow_block[hTab1_ind:length(flow_block)])
   } #end if head type
 
   #bind the full file back together and save it

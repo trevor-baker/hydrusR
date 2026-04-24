@@ -75,7 +75,8 @@ write.atmosph.in <- function(project.path,
   }
 
   #make a copy that is trimmed down to valid columns
-  bc_data_new = atm.bc.data[, bc_data_vars]
+  bc_data_new = atm.bc.data %>%
+    dplyr::select(dplyr::any_of(bc_data_vars))
   row.names(bc_data_new) <- NULL
 
   fmt_vec0 = c("%11.0f", "%12.3f", "%12.4f", "%12.4f", "%12.0f", rep("%12.4f",8)) #rep 8 so it is always too long instead of too short
