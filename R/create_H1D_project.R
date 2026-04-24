@@ -8,8 +8,8 @@
 #' assumed to be FALSE. These are assigned to the Main section of HYDRUS1D.DAT.
 #' @param units named vector giving units for this project, length = 2 (TimeUnit, SpaceUnit), each is a character string.  These are assigned to the
 #' Main section of HYDRUS1D.DAT. \cr
-#' TimeUnit: simulation time unit information (default = "days"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
-#' SpaceUnit: vertical spatial unit (decault = "cm"). permitted: "mm", "cm", "m".
+#' TimeUnit: simulation time unit (default = "days"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+#' SpaceUnit: vertical spatial unit (default = "cm"). permitted: "mm", "cm", "m".
 #' @param profile information about the soil profile. Named vector "SubregionNumbers", value is integer length = 1, telling how many subregions for
 #' mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT.
 #' @param solutes Named vector. Not currently set up for solute simulations. This argument can be omitted and defaults will be set without soute modelling.

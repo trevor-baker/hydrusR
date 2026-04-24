@@ -22,6 +22,7 @@ head.init = -1
 rdepth = 100
 rBeta = 0.962
 subregions = seq(10,200,10)
+obs_nodes = seq(20, profile_depth, by = 20)
 
 
 
@@ -45,15 +46,7 @@ dir.create(project_path, showWarnings = F)
 
 ##Process inputs
 rwu = T   ###  rootwater uptake - passed to create.H1D.project()
-
-##Profile/geometry inputs
-obs_nodes_all = seq(20, profile_depth, by = 20)
-nObsNodes = length(obs_nodes_all)
 rooting_depth = 120
-
-### Time inputs
-total_timesteps = endTime/time_step
-ntimesteps = length(1:total_timesteps)
 
 ## LAI and pet
 et_rate = 0.4 #4 mm/day
@@ -64,6 +57,18 @@ const_botbc = TRUE
 bot_bc_type = "flux" #"head" #this determines which of the below. either 'flux' or 'head'
 const_botFlux = 0.0 #in project units L/T
 const_botHead = 0 #in project units L
+
+
+
+##Profile/geometry inputs
+nObsNodes = length(obs_nodes)
+
+
+### Time inputs
+total_timesteps = endTime/time_step
+ntimesteps = length(1:total_timesteps)
+
+
 
 ### Time-variable Atmospheric top boundary conditions
 atm_bc_data = data.frame(tAtm = seq(time_step, endTime, time_step), #time, same units as project
@@ -143,7 +148,7 @@ create.soil.profile(project.path = project_path,
                     rBeta = rBeta,
                     mat = mat.num,
                     head = head.init,
-                    obs.nodes = obs_nodes_all)
+                    obs.nodes = obs_nodes)
 
 
 # #set water table - I don't need this for my work
