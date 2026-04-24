@@ -8,7 +8,7 @@
 #' assumed to be FALSE. These are assigned to the Main section of HYDRUS1D.DAT.
 #' @param units named vector giving units for this project, length = 2 (TimeUnit, SpaceUnit), each is a character string.  These are assigned to the
 #' Main section of HYDRUS1D.DAT. \cr
-#' TimeUnit: simulation time unit (default = "days"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+#' TimeUnit: simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
 #' SpaceUnit: vertical spatial unit (default = "cm"). permitted: "mm", "cm", "m".
 #' @param profile information about the soil profile. Named vector "SubregionNumbers", value is integer length = 1, telling how many subregions for
 #' mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT.
@@ -42,7 +42,7 @@
 #' create.H1D.project(project.name = "testproj2", parent.dir = parent_dir, description = NULL,
 #'                    processes = c(WaterFlow = T, SoluteTransport = F, RootWaterUptake = F,
 #'                                  RootGrowth = F, Unsatchem = F, HP1 = F, EquilibriumAdsorption = F),
-#'                    units = c(SpaceUnit = "cm", TimeUnit = "days"),
+#'                    units = c(SpaceUnit = "cm", TimeUnit = "hours"),
 #'                    profile = c(SubregionNumbers = 1),
 #'                    setup = c(PrintTimes = 1, InitialCondition = 0),
 #'                    geometry = c(ProfileDepth = 200, NumberOfNodes = 4,

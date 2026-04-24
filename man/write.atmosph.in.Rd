@@ -4,33 +4,19 @@
 \alias{write.atmosph.in}
 \title{Write atmospheric boundary condition inputs}
 \usage{
-write.atmosph.in(
-  project.path,
-  maxAL,
-  atm.bc.data,
-  hCritS = 0,
-  input.pet = T,
-  LAI = 0.39,
-  ...
-)
+write.atmosph.in(project.path, atm.bc.data, hCritS = 0, ...)
 }
 \arguments{
 \item{project.path}{Hydrus project path.}
 
-\item{maxAL}{integer, length = 1. the number of records to be given in ATMOSPH.IN. Same as the number of rows in atm.bc.data.}
-
 \item{atm.bc.data}{dataframe containing all time-variable atmosphere records. must have column 'tAtm', which is the time of each record. Full list
 of columns is given in Hydrus manual Table 12.9. Currently accepted columns are listed next. Not all of these must be given for every simulation,
-only those that are    Prec (precipitation rate, L/T), rSoil (potential evaporation rate,
+only those that are Prec (precipitation rate, L/T), rSoil (potential evaporation rate,
 L/T), rRoot (potential transpiration rate, L/T), hCritA (minimum allowed pressure head at soil surface, dryness limit, L), rB (bottom flux rate,
 L/T), hB (pressure head at soil bottom, L), hT (pressure head at soil top, L).}
 
-\item{hCritS}{numeric, length = 1. the maximum allowed surface head. in project lenght units. Default = 0, meaning that watrer isn't allowed to
+\item{hCritS}{numeric, length = 1. the maximum allowed surface head. in project length units. Default = 0, meaning that watrer isn't allowed to
 pond on the surface. Set this value > 0 if ponding is to be allowed. Do not set this < 0.}
-
-\item{input.pet}{logical, length = 1. Is PET being calculated from met data? Code is not currently set up for this. Will have no effect. PET
-must be specified indirectly by rSoil (E) and rRoot (T), either via atm.bc.data in this function (for variable), or into SELECTOR.IN Block B via
-an unwritten bit of code (for constant).}
 }
 \description{
 This writes ATMOSPH.IN which contains time-variable boundary conditions, including precipitation, potential evaporation and transpiration, boundary

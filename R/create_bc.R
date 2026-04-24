@@ -19,8 +19,9 @@
 #' begin at time=0, the first row will define the conditions from time=0 until time[1], and the second row will define conditions from time[1] to
 #' time[2], and so on. If a constant atmospheric flux is desired, then the dataframe will have only one row, with time = max(time), the endpoint of
 #' the simulation, and the values given will be applied for the whole duration.
-#' @param trans.pc numeric, length = 1, between 0 and 1. What percent of PET should be assigned to transpiration (rRoot)? The remainder will be assigned
-#' to evaporation (rSoil). Default = 1, i.e. all transpiration. Only required if 'PET' column is given in atmos.df.
+#' @param trans.pc numeric, length = 1, between 0 and 1. If PET is a column in atmos.df, what percent of PET should be assigned to transpiration
+#' (rRoot)? The remainder will be assigned to evaporation (rSoil). Default = 1, i.e. all transpiration. Not required if 'PET' column is not given in
+#' atmos.df.
 #' @param hCritS numeric, length = 1. the maximum allowed surface head. in project length units. Only required if atmos = TRUE. Default = 0, meaning
 #' that water isn't allowed to pond on the surface. Set this value > 0 if ponding is to be allowed. Do not set this < 0. In the Hydrus GUI 'Water
 #' Flow Boundary Conditions' menu, setting this to 0 is equivalent to selecting 'Atmospheric BC with Surface Run Off' and setting it > 0 is

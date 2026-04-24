@@ -1,7 +1,7 @@
 #' Writes codes for bottom boundary conditions to SELECTOR.IN
 #'
 #' @param project.path path to the Hydrus project. where SELECTOR.IN file is saved.
-#' @param freeD logical. is this a free-draining profile. i.e. untiy gradient at bottom.
+#' @param FreeD logical. is this a free-draining profile. i.e. untiy gradient at bottom.
 #' @param constant.bc logical, length = 1. is this a time-variable (FALSE) or constant boundary (TRUE) condition? If this is a variable condition, then
 #' additional data will need to be prepared for ATMOSPH.IN by write.atmopsh.in(). If this is a constant boundary condition, then no ATMOSPH.IN data needs
 #' to be set.
@@ -12,7 +12,7 @@
 #' @export
 
 write.bc.bottom <- function(project.path,
-                            freeD = freeD,
+                            FreeD = FreeD,
                             constant.bc,
                             bc.type,
                             bc.value) {
@@ -131,9 +131,9 @@ write.bc.bottom <- function(project.path,
       #for reasons unknown, if the profile is free-draining, even though this is a variable head condition
       # - variable because the head at the bottom changes to match the pressur ehead of the lowermost layer
       # - head because it is the head that changes to match the lower layer to maintain the unity gradient.
-      #however, Hydrus sets the values for freeD to f and -1, as though it were a constant flux. I need to just follow along:
-      if(freeD){
-        botInf_input_split[1] = 'f' #because Hydrus says so if this is freeD=TRUE.
+      #however, Hydrus sets the values for FreeD to f and -1, as though it were a constant flux. I need to just follow along:
+      if(FreeD){
+        botInf_input_split[1] = 'f' #because Hydrus says so if this is FreeD=TRUE.
         botInf_input_split[5] = '-1'
       } else {
         #else remind user

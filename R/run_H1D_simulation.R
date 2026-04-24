@@ -2,10 +2,9 @@
 #'
 #' This function houses call.H1D(), which directly runs Hydrus, and sets up the inputs for running it and managing its outputs. Specifically, Hydrus
 #' will not run simulations with > 960 timesteps, and this function holds a loop structure for running longer simulations wherein the outputs of one
-#' run are fed into input files for the next run, and all outputs are bound together at the end. For a short simulation (< 960 timesteps), call.H1D() could be called directly, but always running Hydrus via run.H1D.simulation keeps workflow
-#' standardized. \cr
-#' #' Note: this function can only be used while running R as an administrator, which can be done by opening RStudio via the right-click menu.
-#'
+#' run are fed into input files for the next run, and all outputs are bound together at the end. For a short simulation (< 960 timesteps), call.H1D()
+#' could be called directly, but always running Hydrus via run.H1D.simulation keeps workflow standardized. \cr
+#' #' Note: this function can only be used while running R as an administrator, which can be done by opening RStudio via the right-click menu.#'
 #' @param project.path
 #' @param hydrus.path The folder where the Hydrus executable is stored. e.g., "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"
 #' @param profile.depth Numeric, length = 1. Total profile depth, in project length units.
@@ -86,6 +85,11 @@ run.H1D.simulation = function(project.path,
 
   } else {
     #else it is long and needs looping
+
+    stop("Looping H1D simulations are not enabled with hydrusR updates. see notes")
+    #I wrote new code, e.g. updated write.atmosph.in, but all the code below uses old arguments and has not been updated at all.
+    # I dind't bother to update this function yet because I don't think any of my MSc uses are going to be long simulations. It
+    # wouldn't be hard to update and make it functional, just not putting in the time right now.
 
     message("Calculating times ", 1, " to ", 960*deltaT, ".....\n")
 

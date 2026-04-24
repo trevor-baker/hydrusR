@@ -61,7 +61,41 @@ write.atmosph.in <- function(project.path,
   tAtm_ind = grep(" tAtm", atm_data) #this is the row of the table header
   end_line = atm_data[grep("end", atm_data)] #the line below the last data row
 
-  bc_data_vars = c("tAtm", "Prec", "rSoil", "rRoot", "hCritA", "rB", "hB", "ht")
+  #these are the currently supported variable names:
+  bc_data_vars = c("tAtm", "Prec", "rSoil", "rRoot",  "hCritA", "rB", "hB", "ht")
+  #these need to be arranged to match the order in SELECTOR.IN
+  sel.header0 <- atm_data[tAtm_ind]
+  sel.header <- strsplit(sel.header0, " ")[[1]]
+  sel.header <- sel.header[-which(sel.header == "")]
+  #re-arrange bc_data_vars, as these will dictate the processing below
+  match.indx <- match(sel.header, bc_data_vars)
+  if(any(is.na(match.indx))){
+    #these are the variables in sel.header that the current data doesn't have. drop them from sel.header
+    drop.var <- sel.header[which(is.na(match.indx))]
+    match.indx <- match.indx[-which(is.na(match.indx))] #now drop the NAs and use this to re-order bc_data_vars
+    #drop it from the original row
+    for(xx in 1:length(drop.var)){
+      #extra steps to preserve spacing
+      # drop the correct number of spaces
+      sel.posn <- which(sel.header == drop.var[xx])
+      start.posn <- if(sel.posn == 1){ 1 } else {
+        gregexpr(sel.header[sel.posn-1], sel.header0)[[1]][1] + nchar(sel.header[sel.posn-1])
+      }
+      end.posn <- if(sel.posn == length(sel.header)){ nchar(sel.header0) } else {
+        gregexpr(sel.header[sel.posn], sel.header0)[[1]][1] + nchar(sel.header[sel.posn]) - 1
+      }
+      old.str <- substr(sel.header0, start.posn, end.posn)
+      sel.header0 <- gsub(old.str,
+                           "",
+                           #paste(rep(" ",nchar(drop.var[xx])),collapse = ""), #replace every character with a blank space to keep spacing format
+                           sel.header0)
+    }
+  }
+  #subset to just the matches in the header
+  bc_data_vars <- bc_data_vars[match.indx]
+  #replace the header row after possibly dropping some not present in this data
+  atm_data[tAtm_ind] <- sel.header0
+
   if(any(is.na(match(names(atm.bc.data), bc_data_vars)))){
     col.miss <- which(is.na(match(names(atm.bc.data), bc_data_vars)))
     name.miss <- names(atm.bc.data)[col.miss]
@@ -81,14 +115,23 @@ write.atmosph.in <- function(project.path,
 
   fmt_vec0 = c("%11.0f", "%12.3f", "%12.4f", "%12.4f", "%12.0f", rep("%12.4f",8)) #rep 8 so it is always too long instead of too short
 
-  bc_data_fmt = bc_data_new #make copy to be replaced line by line below
-  for(a in 1:nrow(bc_data_fmt)) {
+  bc_data_fmt <- lapply(1:nrow(bc_data_new), function(x){ unname(unlist(bc_data_new[x,])) }) #make copy as a list, to be replaced line by line below
+  for(a in 1:length(bc_data_fmt)) {
     this.dec <- get.decimalplaces(bc_data_new$tAtm[a]) #how many decimals in this timestep?
     fmt_vec <- fmt_vec0 #make copy to keep original intact
     fmt_vec[1] = sub(pattern = "0", replacement = this.dec, fmt_vec[1]) #adjust for this time step
-    bc_data_fmt[a, ] = sprintf(fmt = fmt_vec[1:ncol(bc_data_fmt)], bc_data_new[a, ])
+    bc_data_fmt[[a]] = sprintf(fmt = fmt_vec[1:length(bc_data_fmt[[a]])], bc_data_new[a, ])
   }
-  bc_data_fmt = apply(bc_data_fmt, MARGIN = 1, FUN = paste, collapse = "")
+  bc_data_fmt <- lapply(bc_data_fmt, function(x){ paste(x,collapse = "") }) #each line becomes one text string
+  bc_data_fmt <- do.call(c, bc_data_fmt) #make into a vector
+  # bc_data_fmt = bc_data_new #make copy to be replaced line by line below
+  # for(a in 1:nrow(bc_data_fmt)) {
+  #   this.dec <- get.decimalplaces(bc_data_new$tAtm[a]) #how many decimals in this timestep?
+  #   fmt_vec <- fmt_vec0 #make copy to keep original intact
+  #   fmt_vec[1] = sub(pattern = "0", replacement = this.dec, fmt_vec[1]) #adjust for this time step
+  #   bc_data_fmt[a, ] = sprintf(fmt = fmt_vec[1:ncol(bc_data_fmt)], bc_data_new[a, ])
+  # }
+  #bc_data_fmt = apply(bc_data_fmt, MARGIN = 1, FUN = paste, collapse = "")
 
   #piece back together the whole file
   atm_input1 = atm_data[1:tAtm_ind]

@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_H1D_simulation.R
 \name{run.H1D.simulation}
 \alias{run.H1D.simulation}
-\title{This is the main simulation function}
+\title{Main simulation function for running Hydrus 1D}
 \usage{
 run.H1D.simulation(
   project.path,
@@ -11,42 +11,46 @@ run.H1D.simulation(
   beginT,
   endT,
   deltaT,
+  timesteps,
   bot.bc.type,
   bot.bc.value,
   const.bot.bc,
-  soil.para,
   atm.bc.data,
-  ini.wt,
   TimeUnit = "days",
-  rdepth,
-  obs.nodes,
-  show.output = TRUE,
+  root.depth,
+  show.output = FALSE,
   ...
 )
 }
 \arguments{
-\item{endT}{end time}
+\item{hydrus.path}{The folder where the Hydrus executable is stored. e.g., "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"}
 
-\item{deltaT}{time step}
+\item{profile.depth}{Numeric, length = 1. Total profile depth, in project length units.}
 
-\item{bot.bc.type}{head or flux type}
+\item{beginT}{Numeric, length = 1.start time. in project time units}
 
-\item{bot.bc.value}{value of the bc}
+\item{endT}{Numeric, length = 1.end time. in project time units}
 
-\item{const.bot.bc}{Logical, to set if bottom BC is constant}
+\item{deltaT}{Numeric, length = 1.time step. if running simulation at regular timesteps, then this is required. otherwise, timesteps can be declared as a vector via 'timesteps' argument. if 'timesteps' is given, then deltaT is ignored.}
 
-\item{soil.para}{Hydraulic parameters of soil (van Genuchten)}
+\item{bot.bc.type}{Character, length = 1. bottom boundary condition type. "head" or "flux"}
+
+\item{bot.bc.value}{Numeric, length = 1. value of the bottom boundary condition. Only needed if 'const.bot.bc' = TRUE.}
+
+\item{const.bot.bc}{Logical, length = 1. to set if bottom boundary condition is constant. If FALSE, then it is a variable boundary condition and data needs to be supplied in 'atm.bc.data' in either the rB (flux) or hB (head) columns, depending on 'bot.bc.type'}
 
 \item{atm.bc.data}{data frame containing atmonspheric boundary conditions (time variable BC)}
 
-\item{ini.wt}{Initial water table depth}
+\item{TimeUnit}{character, length = 1. simulation time unit information (default = "days"). permitted: "seconds", "minutes", "hours", "days", "years". \cr}
 
-\item{rdepth}{rooting depth}
-
-\item{obs.nodes}{Observation node points (vector)}
+\item{root.depth}{Numeric, length = 1. rooting depth, in project length units.}
 
 \item{show.output}{Logical, whether the shell output of HYDRUS1D run should be displayed on R console, default = F}
 }
 \description{
-This is the main simulation function
+This function houses call.H1D(), which directly runs Hydrus, and sets up the inputs for running it and managing its outputs. Specifically, Hydrus
+will not run simulations with > 960 timesteps, and this function holds a loop structure for running longer simulations wherein the outputs of one
+run are fed into input files for the next run, and all outputs are bound together at the end. For a short simulation (< 960 timesteps), call.H1D()
+could be called directly, but always running Hydrus via run.H1D.simulation keeps workflow standardized. \cr
+#' Note: this function can only be used while running R as an administrator, which can be done by opening RStudio via the right-click menu.#'
 }
