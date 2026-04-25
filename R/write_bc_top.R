@@ -49,14 +49,21 @@ write.bc.top <- function(project.path,
 
   if(bc.type %in% c("flux", "atmos")){
 
-    if(isTRUE(constant.bc) |
-       bc.type == "atmos"){ #this is confusing but Hydrus processes simulations with atmospheric data, no matter whether it is constant or variable, as
-                             # constant fluxes in terms of entering 'f' and '-1' for TopInf and KodTop
+    if(atmos | isTRUE(constant.bc)){
+      #this is a confusing way to structure it.
+      # if there is atmos data, then it gets 't' and '-1'.
+      # if there is no atmos data AND the top flux is constant, then it gets 'f' and '-1'.
+      # if no atmos data and top flux is variable, then it goes to the ELSE and gets 't' and '-3'
 
-      topInf_input_split[1] = 'f' #this is TopInf. TRUE would mean a time-dependent boundary condition is to be imposed at
-      #                             the top of the profile, for which data would be supplied via input file ATMOSPH.IN in Prec (rT) or hT columns.
-      #                             This created would be created by write_atmosph_in function.
-      topInf_input_split[3] = '-1' #this is KodTop. -1 for constant flux
+      if(atmos){
+        topInf_input_split[1] = 't'
+      } else {
+        topInf_input_split[1] = 'f' #this is TopInf. TRUE would mean a time-dependent boundary condition is to be imposed at
+        #                             the top of the profile, or that it has 'atmos' data, for which data would be supplied in both cases
+        #                             via input file ATMOSPH.IN in Prec (rT) or hT columns. This would be created by write_atmosph_in function.
+      }
+
+      topInf_input_split[3] = '-1' #this is KodTop. -1 for constant flux (or for atmos)
       #Kodtop values: +1 = constant head; -1 = constant flux;
       #               +3 = variable head; -3 = variable flux
       # - this is entered as -1 (constant) for simulaitons with atmos data, even if the flux (e.g. P or ET) is variable over time.
@@ -92,7 +99,7 @@ write.bc.top <- function(project.path,
         new_bc_value_fmt = paste(new_value_fmt, collapse = "")
 
       } else {
-        #don't bother making the line new if this has atmos data. the zero does not need to be forced by making anew row. only needs
+        #don't bother making the line new if this has atmos data. the zero does not need to be forced by making a new row. only needs
         # to be entered if, as above, the line of rTop, rBot, rRoot exists already.
         if(!atmos){
 

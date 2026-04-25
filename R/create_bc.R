@@ -31,10 +31,10 @@
 #' or 'vh', then a dataframe must be given to 'top.bc.value'.
 #' @param top.bc.value either a numeric, length = 1, if top.bc.type = 'cf' or 'ch'; or a dataframe with two columns 'time' and 'head' (vh) or 'flux'
 #' (vf) if top.bc.type = 'vf' or 'vh'. all must obey project units, with flux given as a rate (length/time).
-#' @param freeD logical, length = 1. default TRUE. is the bottom boundary free draining? meaning should a unity gradient be assigned throughout the simulation?
+#' @param FreeD logical, length = 1. default TRUE. is the bottom boundary free draining? meaning should a unity gradient be assigned throughout the simulation?
 #' (i.e., matric potential is at equilibrium, and flux driven by gravity only)0. if this is TRUE, then bot.bc.type is ignored. if this is FALSE, then
 #' bot.bc.type and bot.bc.value must be given.
-#' @param bot.bc.type character, length = 1. if freeD = TRUE, this is ignored. if freeD = FALSE, then one of four types is expected here: 'ch' constant
+#' @param bot.bc.type character, length = 1. if FreeD = TRUE, this is ignored. if FreeD = FALSE, then one of four types is expected here: 'ch' constant
 #' head, 'cf' constant flux, 'vh' variable head, 'vf' variable flux. If 'cf' or 'ch' then a numeric value must be supplied to 'bot.bc.value'. If 'vf'
 #' or 'vh', then a dataframe must be given to 'bot.bc.value'.
 #' @param hCritA numeric, length = 1. the minimum allowed surface head, i.e. a dryness limit. Once this is hit, evaporation will cease. If left NULL,
@@ -47,7 +47,7 @@ create.bc <- function(project.path,
                       hCritS = 0,
                       top.bc.type = NULL,
                       top.bc.value = NULL,
-                      freeD = TRUE,
+                      FreeD = TRUE,
                       bot.bc.type = NULL,
                       bot.bc.value = NULL,
                       hCritA = NULL, ...){
@@ -181,18 +181,18 @@ create.bc <- function(project.path,
     } #end checks on top.bc.type and .value
   } #end !atmos section
 
-  if(freeD){
+  if(FreeD){
     #as above with atmos, need to fill bot.bc to pass through data prep sections (NULL not allowed)
-    # if freeD, then bot.bc will be managed by Hydrus and I will set it here so it isn't NULL
-    bot.bc.type <- "freeD"
+    # if FreeD, then bot.bc will be managed by Hydrus and I will set it here so it isn't NULL
+    bot.bc.type <- "FreeD"
 
-    #no data prep needed for bot.bc.value, because this object will be ignored. if freeD, then Hydrus manages it all. no inputs are given.
+    #no data prep needed for bot.bc.value, because this object will be ignored. if FreeD, then Hydrus manages it all. no inputs are given.
   }
 
-  #if !freeD, then check bot.bc.type and .value
-  if(!freeD){
-    if(is.null(bot.bc.type)){ stop("bot.bc.type must be given because freeD = FALSE.") }
-    if(is.null(bot.bc.value)){ stop("bot.bc.value must be given because freeD = FALSE.") }
+  #if !FreeD, then check bot.bc.type and .value
+  if(!FreeD){
+    if(is.null(bot.bc.type)){ stop("bot.bc.type must be given because FreeD = FALSE.") }
+    if(is.null(bot.bc.value)){ stop("bot.bc.value must be given because FreeD = FALSE.") }
     if(!bot.bc.type %in% c("ch", "cf", "vh", "vf")){ stop("bot.bc.type must be 'ch', 'cf', 'vh', or 'vf'") }
     if(bot.bc.type %in% c("ch","cf")){
       if(!is.vector(bot.bc.value)){ stop("Constant head (ch) or flux (cf) bottom boundary type was given, so 'bot.bc.value' must be numeric with length = 1") }
@@ -232,7 +232,7 @@ create.bc <- function(project.path,
       }
 
     } #end checks on bot.bc.type and .value
-  } #end !freeD section
+  } #end !FreeD section
 
   #surface dryness limit = 1e5 cm
   if(is.null(hCritA)){
@@ -250,7 +250,7 @@ create.bc <- function(project.path,
   # - ATMOSPH.IN does not just hold atmospheric boudnary conditions, it holds any variable boundary condition data, including those for variable
   #     bottom head (hB column) and flux (rB column).
   # - in this section, ATMOSPH.IN is put together if needed from some combination of atmos.df, top.bc.value, and bot.bc.value.
-  # -- in the case of a constant top boundary condition and either a constant bottom condition or freeD = TRUE, then ATMOSPH.IN is not needed at all.
+  # -- in the case of a constant top boundary condition and either a constant bottom condition or FreeD = TRUE, then ATMOSPH.IN is not needed at all.
   if(atmos |
      top.bc.type %in% c("vh","vf") |
      bot.bc.type %in% c("vh","vf")){
@@ -346,7 +346,7 @@ create.bc <- function(project.path,
                bc.value = ifelse(is.vector(top.bc.value), top.bc.value, ""))
 
   write.bc.bottom(project.path,
-                  freeD = freeD,
+                  FreeD = FreeD,
                   constant.bc = bot.bc.type %in% c("cf","ch"),
                   bc.type = ifelse(bot.bc.type %in% c("cf", "vf"), "flux", "head"),
                   bc.value = ifelse(is.vector(bot.bc.value), bot.bc.value, ""))

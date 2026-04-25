@@ -53,6 +53,21 @@ write.atmosph.in <- function(project.path,
   maxAL_ind = grep("MaxAL", atm_data)
   atm_data[maxAL_ind + 1] <- sprintf("%7.0f", nrow(atm.bc.data)) #set it by nrow of the dataframe given
 
+  #ensure lLay is FALSE. Do not need Hydrus to split PET, I have rRoot and rSoil already
+  lL_ind <- grep("lLay", atm_data)
+  lL_head <- atm_data[lL_ind]
+  lL_head_split <- strsplit(lL_head, " ")[[1]]
+  lL_head_split <- lL_head_split[-which(lL_head_split == "")]
+  lL_posn <- which(lL_head_split == "lLay")
+  if(length(lL_posn)>0){ #lLay may not always be found, so put this in an if()
+    lL_dat <- atm_data[lL_ind+1] #find which one is lLay
+    mm <- gregexpr("\\S+", lL_dat)[[1]][lL_posn] #indexes of none blank characters. I want the one that marks the lLay value's position
+    lL_dat_start0 <- substr(lL_dat,1, mm-1) #take the string from beginning to one before lLay posn
+    lL_dat_start <- paste0(lL_dat_start0,"f") #force the value false
+    lL_dat_good <- gsub(paste0("^",lL_dat_start0,"."), lL_dat_start, lL_dat, perl = T) #sub the initial string with any t/f value for the fixed string that has f for lLay
+    atm_data[lL_ind+1] <- lL_dat_good #replace values
+  }
+
   #replace hCritS value
   hcrits_ind = grep("hCritS", atm_data)
   atm_data[hcrits_ind + 1] = sprintf("%7.0f", hCritS)

@@ -60,3 +60,97 @@ select climate data for the next loop iteration.}
 \description{
 Prepare climate data for Hydrus-1D. Returns a dataframe and optionally writes it to file in your project directory.
 }
+\examples{
+ppath <- "C:/users/t/documents/temp/tdbexample1"
+#as simple example using _mmd format and no diurnal pattern
+df.at1 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "hours", SpaceUnit = "cm",
+                           endTime = 24*365,
+                           Prec_mmd = 4,
+                           PET_mmd = 3,
+                           diurnal = FALSE,
+                           trans.pc = 0.8)
+df.at1[1:24,] #all hours are the same, no diurnal
+sum(df.at1$rRoot[1:24])
+sum(df.at1$rSoil[1:24]) #0.3 cm/d for rRoot+rSoil = 3 mm/d
+sum(df.at1$Prec[1:24]) #0.4 cm/d Prec = 4 mm/d
+sum(df.at1$Prec) #yearly sum is 146 cm, 1460 mm.
+
+#same but with diurnal pattern
+df.at2 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "hours", SpaceUnit = "cm",
+                           endTime = 24*365,
+                           Prec_mmd = 4,
+                           PET_mmd = 3,
+                           diurnal = TRUE,
+                           trans.pc = 0.8)
+df.at2[1:24,] #all hours are the same for Prec, but diurnal for rRoot and rSoil - as intended
+sum(df.at2$rRoot[1:24])
+sum(df.at2$rSoil[1:24]) #0.3 cm/d for rRoot+rSoil = 3 mm/d
+sum(df.at2$Prec[1:24]) #0.4 cm/d Prec = 4 mm/d
+sum(df.at2$Prec) #yearly sum is 146 cm, 1460 mm.
+
+#now the same as df.at2 but with m/year units
+df.at3 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "years", SpaceUnit = "m",
+                           endTime = 1.1,
+                           Prec_mmd = 4,
+                           PET_mmd = 3,
+                           diurnal = TRUE,
+                           trans.pc = 0.8)
+df.at3 #this has only one row, covers the whole 1.1 years.
+# all values are rates, and rates match the ones above after unit conversion:
+df.at3$rRoot/365 *1000 #2.4 mm/d
+df.at3$rSoil/365 *1000 #0.6 mm/d = 3 mm/d together
+df.at3$Prec/365 *1000 #4 mm/d
+
+#now similar to df.atm1 but with _values vectors, not _mmd format
+# added in a couple short timesteps of zero values to show that _values get put into final result properly
+df.at4 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "hours", SpaceUnit = "cm",
+                           endTime = 2400,
+                           time_values = c(1,2399,2400),
+                           #same values as df.atm1 but I need to do time and length conversions myself
+                           Prec_values = c(4/10/24, 4/10/24, 0),
+                           PET_values =  c(0, 3/10/24, 3/10/24),
+                           trans.pc = 0.8)
+df.at4
+df.at1[c(1,2399,2400),] #this is basically the same except the rates are exactly same, never zero, for all hours
+
+#now a similar one with no PET
+df.at5 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "hours", SpaceUnit = "cm",
+                           endTime = 2400,
+                           time_values = c(1,2399,2400),
+                           #same values as df.atm1 but I need to do time and length conversions myself
+                           Prec_values = c(4/10/24, 4/10/24, 0),
+                           #PET_values =  c(0, 3/10/24, 3/10/24),
+                           trans.pc = 0.8)
+df.at5 #missing rRoot and rSoil, as intended
+df.at4 #same Prec
+
+#now a similar one with no PET
+df.at6 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "hours", SpaceUnit = "cm",
+                          endTime = 2400,
+                          time_values = c(1,2399,2400),
+                           #same values as df.atm1 but I need to do time and length conversions myself
+                           #Prec_values = c(4/10/24, 4/10/24, 0),
+                           PET_values =  c(0, 3/10/24, 3/10/24),
+                           trans.pc = 0.8)
+df.at6 #missing Prec, as intended
+df.at4 #same rRoot and rSoil
+
+#an example with big variations in PET and Prec over a long time
+df.at7 <- prep.H1D.climate(project.path = ppath,
+                           TimeUnit = "hours", SpaceUnit = "cm",
+                           endTime = 2400,
+                           time_values = 1:2000,
+                           #strange values, in whatever pattern
+                           Prec_values = c( (1:100)/100*3+1, rnorm(2200,5,1), (100:1)/100*5+1),
+                           PET_values =  sort(c(rnorm(1200,2,1),rnorm(1200,6,2))),
+                           trans.pc = 0.8)
+#the values carry through as expected:
+plot(df.at7$time, df.at7$Prec)
+points(df.at7$time, df.at7$rSoil+df.at7$rRoot, col = "red")
+}

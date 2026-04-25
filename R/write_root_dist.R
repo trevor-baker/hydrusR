@@ -85,6 +85,7 @@ write.root.dist <- function(project.path,
   smallest.int <- min(diff(all_depths)) #this needs to be the basis so that even the thinnest layer gets correct value
   all.int <- seq(0,max(rdepth_coord),smallest.int) #sequence from 0 to rooting depth at the smallest interval
   all.rdist <-  1-rBeta^all.int #rdist values for every interval
+  all.rdist <- rev(all.rdist) #highest values at top of soil
   #now group them into their nodes. some nodes have one value, some are wider intervals and contain many values
   node.rdist <- sapply(2:length(all_depths), function(x){
     this.deps <- c(all_depths[x-1], all_depths[x])
@@ -96,10 +97,10 @@ write.root.dist <- function(project.path,
   node.rdist <- sapply(node.rdist, sum) #sum all to get one value per row of soil table
   print("write.root.dist: what is origin of rBeta? need ref.")
   #plot(all.int[1:length(node.rdist)], node.rdist) #rdist will have length one less than all.int so need to subset for plotting
-  rdist <- rev(node.rdist) #highest values at top of soil
+  #rdist <- rev(node.rdist) #highest values at top of soil
   #rdist <- rdist/sum(rdist) #normalize to sum 1 - this is not necessary. Hydrus results will be the same if rdist values by layer are 1,1,0,... as it would be with 0.5,0.5,0,...
   rdist_new <- rep(0, num_nodes) #make full vector. one value for every Node row. default zero roots.
-  rdist_new[1:length(rdist)] <- rdist #sub the other values, starting from top
+  rdist_new[1:length(node.rdist)] <- node.rdist #sub the other values, starting from top
   #plot(all_depths, rdist_new)
 
   root_dist_fmt = mapply(FUN = format2sci, rdist_new, ndec = 6, power.digits = 3)

@@ -136,10 +136,10 @@ write.bc.bottom <- function(project.path,
         botInf_input_split[1] = 'f' #because Hydrus says so if this is FreeD=TRUE.
         botInf_input_split[5] = '-1'
       } else {
-        #else remind user
+        #else remind user to give data
         # - this might not be nesscary because the etensive checks in create.bc might prevent a case where hB values weren't making
         #     it into ATMOSPH.IN
-        cat("Time-variable bottom head must be specified in the ATMOSPH.IN table.\n")
+        cat("Time-variable bottom head (column 'hB') must be specified in the ATMOSPH.IN table.\n")
       }
 
 

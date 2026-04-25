@@ -4,12 +4,12 @@
 \alias{write.bc.bottom}
 \title{Writes codes for bottom boundary conditions to SELECTOR.IN}
 \usage{
-write.bc.bottom(project.path, freeD = freeD, constant.bc, bc.type, bc.value)
+write.bc.bottom(project.path, FreeD = FreeD, constant.bc, bc.type, bc.value)
 }
 \arguments{
 \item{project.path}{path to the Hydrus project. where SELECTOR.IN file is saved.}
 
-\item{freeD}{logical. is this a free-draining profile. i.e. untiy gradient at bottom.}
+\item{FreeD}{logical. is this a free-draining profile. i.e. untiy gradient at bottom.}
 
 \item{constant.bc}{logical, length = 1. is this a time-variable (FALSE) or constant boundary (TRUE) condition? If this is a variable condition, then
 additional data will need to be prepared for ATMOSPH.IN by write.atmopsh.in(). If this is a constant boundary condition, then no ATMOSPH.IN data needs

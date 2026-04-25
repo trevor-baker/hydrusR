@@ -51,13 +51,13 @@ hCritS <- 0
 
 # soil inputs
 profile_depth = 200
-depth_vec = c(0,1,10,50,100,200)
-mat_num =   c(1,1, 1, 1,  2,  2)
+depth_vec = seq(0,200,1)
+mat_num =   c(rep(1, length(which(depth_vec <= 100))), rep(2, length(which(depth_vec > 100))) )
 head_init = -1
 root_depth = 100
 rBeta = 0.962
-subregions = seq(10,200,10)
-obs_nodes = seq(20, profile_depth, by = 20)
+subregions = c(100,200) #one per matl
+obs_nodes = c(10,110,190)
 
 # - soil parameters:
 #one matl
@@ -132,11 +132,11 @@ bc.args <- data.frame(TopInf = NA, KodTop = NA_integer_,
                       BotInf = NA, KodBot = NA_integer_,
                       WLayer = NA,
                       FreeD = FreeD)
-bc.args$TopInf <- atmos | !const_topbc  #is the top BC variable (TRUE) or constant (FALSE) - atmos gets entered here as FALSE even though it can vary
+bc.args$TopInf <- atmos_bc | !const_topbc  #is the top BC variable (TRUE) or constant (FALSE) - atmos gets entered here as FALSE even though it can vary
 bc.args$BotInf <- if(FreeD){ FALSE } else { #is the bottom BC variable (TRUE) or constant (FALSE) - FreeD gets set as FALSE by Hydrus
   if(const_botbc){ FALSE } else {TRUE } }
 
-bc.args$KodTop <- if(atmos){ -1 } else { #this is entered as -1 (constant) for simulations with atmos data, even if the flux (e.g. P or ET) is variable over time.
+bc.args$KodTop <- if(atmos_bc){ -1 } else { #this is entered as -1 (constant) for simulations with atmos data, even if the flux (e.g. P or ET) is variable over time.
   if(const_topbc){
     #constants are (1), flux is -1 and head is +1
     if(top_bc_type == "flux"){ -1 } else { +1 }} else {
@@ -189,11 +189,11 @@ create.H1D.project(project.name = project_name,
 ### create the soil profile (PROFILE.DAT) info
 create.soil.profile(project.path = project_path,
                     profile.depth = profile_depth,
-                    depth.vec = depth.vec,
+                    depth.vec = depth_vec,
                     root.depth = root_depth,
                     rBeta = rBeta,
-                    mat = mat.num,
-                    head = head.init,
+                    mat = mat_num,
+                    head = head_init,
                     obs.nodes = obs_nodes)
 
 
@@ -215,7 +215,7 @@ create.bc(project.path = project_path,
           hCritS = 0,
           top.bc.type = NULL,
           top.bc.value = NULL,
-          freeD = TRUE,
+          FreeD = TRUE,
           bot.bc.type = NULL,
           bot.bc.value = NULL)
 
@@ -239,7 +239,22 @@ create.bc(project.path = project_path,
 # --- would be nice to test others, but I know all my work in near future will be freeD with and without Prec and ET.
 #
 # - still stuck on PrintTimes and atm times. these are tied together somehow. they are separate. not sure how I'm passing print times right now.
-#
+
+hydrus.path <- "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"
+call.H1D(project.path, hydrus.path = hydrus.path, show.output = TRUE)
+
+#read these results vs those run in Hydrus GUI with same settings
+# - very close but not quite a match. unsure if it is enough to worry about and how different it might be with other soils/
+df.this <- read.nod_inf(project.path)
+df.hyd <- read.nod_inf("C:/users/t/Documents/Hydrus1D/Examples/Direct/R-h1D_flow_example1")
+plot(df.this$Time[df.this$Depth == -10], df.this$Head[df.this$Depth == -10], type = "l", ylim = c(-1000,0))
+points(df.hyd$Time[df.hyd$Depth == -10], df.hyd$Head[df.hyd$Depth == -10], type = "l", col = "red")
+
+plot(df.this$Time[df.this$Depth == -50], df.this$Head[df.this$Depth == -50], type = "l", ylim = c(-1000,0))
+points(df.hyd$Time[df.hyd$Depth == -50], df.hyd$Head[df.hyd$Depth == -50], type = "l", col = "red")
+
+plot(df.this$Time[df.this$Depth == -50], df.this$Moisture[df.this$Depth == -50], type = "l")
+points(df.hyd$Time[df.hyd$Depth == -50], df.hyd$Moisture[df.hyd$Depth == -50], type = "l", col = "red")
 
 
 

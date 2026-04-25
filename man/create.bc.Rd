@@ -11,7 +11,7 @@ create.bc(
   hCritS = 0,
   top.bc.type = NULL,
   top.bc.value = NULL,
-  freeD = TRUE,
+  FreeD = TRUE,
   bot.bc.type = NULL,
   bot.bc.value = NULL,
   hCritA = NULL,
@@ -45,11 +45,11 @@ or 'vh', then a dataframe must be given to 'top.bc.value'.}
 \item{top.bc.value}{either a numeric, length = 1, if top.bc.type = 'cf' or 'ch'; or a dataframe with two columns 'time' and 'head' (vh) or 'flux'
 (vf) if top.bc.type = 'vf' or 'vh'. all must obey project units, with flux given as a rate (length/time).}
 
-\item{freeD}{logical, length = 1. default TRUE. is the bottom boundary free draining? meaning should a unity gradient be assigned throughout the simulation?
+\item{FreeD}{logical, length = 1. default TRUE. is the bottom boundary free draining? meaning should a unity gradient be assigned throughout the simulation?
 (i.e., matric potential is at equilibrium, and flux driven by gravity only)0. if this is TRUE, then bot.bc.type is ignored. if this is FALSE, then
 bot.bc.type and bot.bc.value must be given.}
 
-\item{bot.bc.type}{character, length = 1. if freeD = TRUE, this is ignored. if freeD = FALSE, then one of four types is expected here: 'ch' constant
+\item{bot.bc.type}{character, length = 1. if FreeD = TRUE, this is ignored. if FreeD = FALSE, then one of four types is expected here: 'ch' constant
 head, 'cf' constant flux, 'vh' variable head, 'vf' variable flux. If 'cf' or 'ch' then a numeric value must be supplied to 'bot.bc.value'. If 'vf'
 or 'vh', then a dataframe must be given to 'bot.bc.value'.}
 

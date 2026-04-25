@@ -114,10 +114,15 @@ write.hydraulic.para<- function(project.path,
   # para_values_new = paste(para_values_fmt, collapse = "")
 
 
-  value_format_vec = c("%7.4f", "%8.4f", "%8.4f", "%8.3f", "%11.5f", "%8.2f", "%8.3f", "%8.3f", "%11.3f", "%8.3f") #spacing format for parameter values
+  value_format_vec0 = c("%7._f", "%8._f", "%8._f", "%8._f", "%11._f", "%8._f", "%8._f", "%8._f", "%11._f", "%8._f") #spacing format for parameter values
   #lapply through rows of df.para and apply formatting
   para_values_list <- lapply(1:nrow(df.para), function(x){
-    para_val_fmt = sprintf(fmt = value_format_vec[1:ncol(df.para)], df.para[x,])
+    this.para <- df.para[x,]
+    this.dec <- sapply(this.para, get.decimalplaces)
+    value_format_vec <- sapply(1:length(this.dec), function(x){ #fill in the blanks on the format vectoe
+      gsub("\\._f", paste(".",this.dec[x],"f"), value_format_vec0[x])
+    })
+    para_val_fmt = sprintf(fmt = value_format_vec, this.para)
     para_val_new = paste(para_val_fmt, collapse = "")
   })
   para_values_new <- do.call(c, para_values_list)

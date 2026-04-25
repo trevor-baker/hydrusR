@@ -72,7 +72,7 @@ write.sim.settings <- function(project.path,
   #this line is where MaxIt, TolTh, TolH are given
   tol_line_ind = grep("MaxIt", flow_block) #get index of header row where first settings are declared: MaxIt, TolTh, TolH
   tol_line = flow_block[tol_line_ind + 1]
-  tol_fmt_vec = c("%5s", "%9s", "%7s") #spacing format
+  tol_fmt_vec = c("%4s", "%9s", "%7s") #spacing format
   tol_line_fmt = mapply(FUN = sprintf, c(MaxIt, TolTh, TolH), fmt = tol_fmt_vec) #format the param names
   tol_line_new = paste(tol_line_fmt, collapse = "") #make it a new line to be subbed back into the block below
   flow_block[tol_line_ind+1] <- tol_line_new
