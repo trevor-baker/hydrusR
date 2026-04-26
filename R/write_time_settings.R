@@ -9,7 +9,11 @@
 #' @param dtMin,dtMax numeric, length = 1. minimum and maximum  allowed time step, in your project's time units.
 #' @param DMul numeric, length = 2. range of time step multiplication factors. Default c(0.7,1.3).
 #' @param ItRange integer, length = 2. optimal iteration range. Sets parameters ItMin and ItMax.
-#' @param print.step integer, length = 1. the interval at which results will be printed (e.g. to "Nod_Inf.OUT"). in your project's time units.
+#' @param print.step integer, length = 1. the interval at which results will be printed (e.g. to "Nod_Inf.OUT"). in your project's time units. This is
+#' overruled by print.at, if given.
+#' @param print.at numeric vector, any length. the timesteps that results will be printed at. While 'print.step' causes printing at equal intervals,
+#' print.at enables printing at any timestep, which is ideal for capturing early results at a higher resolution and spacing results further as a
+#' simulation runs. e.g. print.at = c(0.1,0.5,1,5,10,50,100,200,300). If this is NULL, then print.step will be used to create regular print.at intervals.
 #' @author Trevor Baker <tbaker@iegconsulting.com>
 #' @export
 
@@ -20,7 +24,8 @@ write.time.settings <- function(project.path,
                                 dtMax = 1,
                                 DMul = c(0.7,1.3),
                                 ItRange = c(3,7),
-                                print.step){
+                                print.step = NULL,
+                                print.at = NULL){
 
   print("write.time.settings: better to add print.times arg for better print spacing. see notes")
   #print.step either forces too many closely spaced prints as soil dries, or has too much time between prints when soil is wet
@@ -37,6 +42,21 @@ write.time.settings <- function(project.path,
   if(max(DMul) < 1){
     DMul <- c(min(DMul), 1.3)
   }
+  if(!is.null(print.at)){
+    if(min(print.at) < time.range[1]){
+      print.at <- print.at[which(print.at >= time.range[1])]
+    }
+    if(max(print.at) > time.range[2]){
+      print.at <- print.at[which(print.at <= time.range[2])]
+    }
+    print.step <- NULL #if print.at given, then print.step is ignored.
+  } else {
+    #print.at not given, so create from from print.step
+    print.at <- seq(time.range[1]+print.step, time.range[2], by = print.step)
+    print.at <- unique(c(print.at, time.range[2])) #ensure that endTime gets printed always
+  }
+
+
 
 
   #####
@@ -58,13 +78,23 @@ write.time.settings <- function(project.path,
 
   #this line is where values for time settings are declared
   para_line_ind1 = grep("dt", this_block)+1 #the line below the one with param names
-  para_name_fmt_vec1 = c("%12s", "%13s", "%12s", "%8s", "%8s", "%6s", "%6s", "%6s", "%6s") #spacing format
-  MPL <- floor(diff(time.range)/print.step) #how many times will results be printed
+  para_name_fmt_vec1 = c("%11s", "%12s", "%12s", "%8s", "%8s", "%6s", "%6s", "%6s", "%6s") #spacing format. formerly started with 12 and 13 but changed to match GUI.
+  MPL <- length(print.at) #how many times will results be printed
   para_values1 <- c(dt, dtMin, dtMax, max(DMul), min(DMul), min(ItRange), max(ItRange), MPL)
-  para_values1[1:3] <- format2sci(para_values1[1:3], ndec = 3, power.digits = 3) #put these in Hydrus sci notation
+  #para_values1[1:3] <- format2sci(para_values1[1:3], ndec = 3, power.digits = 3) #put these in Hydrus sci notation (GUI doesn't seem to so I've commented this out. trying to match GUI exactly.)
   para_line_fmt1 = mapply(FUN = sprintf, para_values1, fmt = para_name_fmt_vec1[1:length(para_values1)]) #format the param names
   para_line_new1 = paste(para_line_fmt1, collapse = "") #make it a new line to be subbed back into the block below
   this_block[para_line_ind1] <- para_line_new1
+
+  #update tMin and tMax
+  tmax_ind = grep(" tMax", this_block)
+  tmax_line = this_block[tmax_ind + 1]
+  tmax_line_split = time.range #c(tmin, tmax)
+  tmax_line_new = sprintf(c("%11.0f", "%12.0f"), tmax_line_split)
+  tmax_line_new = paste(tmax_line_new, collapse = "")
+  this_block[tmax_ind + 1] = tmax_line_new
+
+
 
   #now overwrite the original values with those set here
   input_data[time_start_ind : time_end_ind] <- this_block
@@ -78,8 +108,6 @@ write.time.settings <- function(project.path,
   # now use the pre-existing write.print.times fn to fill the TPrint block
   # - this remains as a standalone fn because it is needed for resetting the Time Block for looping
   write.print.times(project.path,
-                    tmin = min(time.range),
-                    tmax = max(time.range),
-                    print.step = print.step)
+                    print.at = print.at)
 
 }

@@ -29,7 +29,8 @@ write.atmosph.in <- function(project.path,
 
   #remove pre-existing ATMOSPH file
   if(file.exists(file.path(project.path, out.file))){
-          file.remove(file.path(project.path, out.file))
+    #file.remove(file.path(project.path, out.file))
+    unlink(file.path(project.path, out.file), force = TRUE)
   }
 
   # #TDB: commenting this out. I think it is supposed to be setting the radiation extinction coefficient 'rExtinct', but in their
@@ -77,7 +78,8 @@ write.atmosph.in <- function(project.path,
   end_line = atm_data[grep("end", atm_data)] #the line below the last data row
 
   #these are the currently supported variable names:
-  bc_data_vars = c("tAtm", "Prec", "rSoil", "rRoot",  "hCritA", "rB", "hB", "ht")
+  # - RootDepth is not actually functional right now but GUI always prints it as a blank column even when root growth is off.
+  bc_data_vars = c("tAtm", "Prec", "rSoil", "rRoot",  "hCritA", "rB", "hB", "ht", "RootDepth")
   #these need to be arranged to match the order in SELECTOR.IN
   sel.header0 <- atm_data[tAtm_ind]
   sel.header <- strsplit(sel.header0, " ")[[1]]
@@ -123,30 +125,64 @@ write.atmosph.in <- function(project.path,
                paste(name.miss, collapse = ", "), "\n"))
   }
 
-  #make a copy that is trimmed down to valid columns
+  #make a copy of the input data that is ready for formatting
   bc_data_new = atm.bc.data %>%
+    #trim down to valid columns
     dplyr::select(dplyr::any_of(bc_data_vars))
   row.names(bc_data_new) <- NULL
+  #bc_data_new actually needs all of the columns in bc_data_vars. if it doesn't have them then
+  # I will fill them to match GUI's formatting. GUI sets rB, hB and ht as 0, and leaves RootDepth blank
+  miss.indx <- which(is.na(match(bc_data_vars, names(bc_data_new))))
+  if(length(miss.indx)>0){
+    for(xx in 1:length(miss.indx)){
+      this.indx <- miss.indx[xx]
+      this.col <- bc_data_vars[this.indx]
+      if(this.col %in% c("rB","hB","ht")){ #ht is not a typo. manual says hT (head at top) to match capitalization of hB (head at bottom) but GUI writes the header as hB and ht, so I will copy that
+        bc_data_new$new.col <- 0 #temporarily call it new.col. rename it below.
+      } else {
+        bc_data_new$new.col <- "" #for RootDepth column because GUI leaves it blank.
+      }
+      names(bc_data_new)[ncol(bc_data_new)] <- this.col
+    }
+  } #end if to fill missing columns
 
   fmt_vec0 = c("%11.0f", "%12.3f", "%12.4f", "%12.4f", "%12.0f", rep("%12.4f",8)) #rep 8 so it is always too long instead of too short
 
   bc_data_fmt <- lapply(1:nrow(bc_data_new), function(x){ unname(unlist(bc_data_new[x,])) }) #make copy as a list, to be replaced line by line below
   for(a in 1:length(bc_data_fmt)) {
-    this.dec <- get.decimalplaces(bc_data_new$tAtm[a]) #how many decimals in this timestep?
-    fmt_vec <- fmt_vec0 #make copy to keep original intact
-    fmt_vec[1] = sub(pattern = "0", replacement = this.dec, fmt_vec[1]) #adjust for this time step
-    bc_data_fmt[[a]] = sprintf(fmt = fmt_vec[1:length(bc_data_fmt[[a]])], bc_data_new[a, ])
+    #loop through all lines of the bc_data (rows of the table of variable BC data)
+
+
+    # this.dec <- get.decimalplaces(bc_data_new$tAtm[a]) #how many decimals in this timestep?
+    # fmt_vec <- fmt_vec0 #make copy to keep original intact for next loop iteration
+    # fmt_vec[1] = sub(pattern = "0", replacement = this.dec, fmt_vec[1]) #adjust for this time step
+
+    this.dec <- sapply(bc_data_new[a,], get.decimalplaces) #how many decimals in this timestep?
+    fmt_vec <- fmt_vec0 #make copy to keep original intact for next loop iteration
+    for(b in 1:length(this.dec)){
+      if(is.na(this.dec[b])){
+        #if this.dec is NA, it means it is not a numeric value. likely the blank RootDepth
+        # in which case the formatting needs to be different (%s instead of %f)
+        this.fmt <- fmt_vec[b]
+        this.fmt <- gsub("\\..f","s", this.fmt) #swap 's' for the deicmal place indicator and the 'f'
+        fmt_vec[b] <- this.fmt
+      } else {
+        #else give proper decimals to formatting
+        fmt_vec[b] = sub(pattern = "0", replacement = this.dec[b], fmt_vec[b]) #adjust for this time step
+      }
+    } #end for loop to swap formats
+
+    #assign formatting to this line
+    #bc_data_fmt[[a]] = sprintf(fmt = fmt_vec[1:length(bc_data_fmt[[a]])], bc_data_new[a, ]) #doesn't work if RootDepth is character. vector needs to be all one class
+    #need to sapply through them if they are different classes
+    bc_data_fmt[[a]] <- sapply(1:length(bc_data_fmt[[a]]), function(aa){ sprintf(fmt = fmt_vec[aa], bc_data_new[a,aa]) })
   }
-  bc_data_fmt <- lapply(bc_data_fmt, function(x){ paste(x,collapse = "") }) #each line becomes one text string
+  bc_data_fmt <- lapply(bc_data_fmt, function(x){
+    str1 <- paste(x,collapse = "")
+    str1 <- paste0(str1," ") #add trailing space to each line to try to match GUI outputs exactly
+  }) #each line becomes one text string
   bc_data_fmt <- do.call(c, bc_data_fmt) #make into a vector
-  # bc_data_fmt = bc_data_new #make copy to be replaced line by line below
-  # for(a in 1:nrow(bc_data_fmt)) {
-  #   this.dec <- get.decimalplaces(bc_data_new$tAtm[a]) #how many decimals in this timestep?
-  #   fmt_vec <- fmt_vec0 #make copy to keep original intact
-  #   fmt_vec[1] = sub(pattern = "0", replacement = this.dec, fmt_vec[1]) #adjust for this time step
-  #   bc_data_fmt[a, ] = sprintf(fmt = fmt_vec[1:ncol(bc_data_fmt)], bc_data_new[a, ])
-  # }
-  #bc_data_fmt = apply(bc_data_fmt, MARGIN = 1, FUN = paste, collapse = "")
+
 
   #piece back together the whole file
   atm_input1 = atm_data[1:tAtm_ind]

@@ -3,17 +3,11 @@
 #' This function has two uses. To create a properly formatted TPrint block for SELECTOR.IN containing all times that values will be printed (e.g., to
 #' "Nod_Inf.OUT"), and, for use in hydrusR's looping of long simulations, to replace the time range and MPL values for each successive loop's input file.
 #' @param project.path Location of the H1D project in the directory
-#' @param tmin,tmax Numeric, length = 1. Beginning and ending times of this simulation, in this project's time units. tmin will not have results printed, the first
-#' print will be at tmin+print.step, and then at every print.step until tmax, i.e. seq(tmin+print.step, tmax, print.step). tmin does not need to be 0,
-#' it can be any value.
-#' @param print.step Numeric, length = 1. Time interval to print at, in this project's time units. This would be set in Hydrus GUI in Print Information-Print at Regular Time Interval
-#' @param ...
+#' @param print.at numeric vector, any length. The times to print results at, in this project's time units.
 #' @export
 
 write.print.times   <- function(project.path,
-                                tmin,
-                                tmax,
-                                print.step, ...){
+                                print.at){
 
   input.file = file.path(project.path, "SELECTOR.IN")
 
@@ -22,7 +16,7 @@ write.print.times   <- function(project.path,
   Tprint_ind = grep("TPrint", hydrus_input) #get indices of block to be edited
   end_Tprint_ind = grep("BLOCK G", hydrus_input)
 
-  ptimes = seq((tmin + print.step), tmax, by = print.step) #vector of times for printing
+  ptimes <- print.at #keep pre-exisitng name. this used to be made by seq(tmin+print.step, tmax, by = print.step). now print.at is given as argument
 
   if(length(ptimes) > 1000){
         stop("Hydrus 1D does not allow printing > 1000 time steps!")
@@ -35,16 +29,16 @@ write.print.times   <- function(project.path,
   rem_times = ptimes[(length(ptimes) - rem_tstep + 1):length(ptimes)] #what are the times of these leftover steps
   ptimes_mat = matrix(p1, nrow = nrows, ncol = 6, byrow = TRUE) #set up matrix for the main chunk of values
 
-  fmt_vec = c("%11.0f", rep("%12.0f", 5))
-  #adjust formatting if time step has decimals
-  print.step_decimals = get.decimalplaces(print.step)
-  if(print.step_decimals > 0){
-    fmt_vec = gsub(pattern = "0", replacement = print.step_decimals, fmt_vec)
-  }
 
   #format the matrix of time values
-  ptimes_mat_fmt <- ptimes_mat
+  fmt_vec0 = c("%11.0f", rep("%12.0f", 5)) #the standard spacing for a line of the TPrint table
+  ptimes_mat_fmt <- ptimes_mat #make a copy of the matrix that will be formatted below
   for(p in 1:nrow(ptimes_mat_fmt)){
+    #adjust formatting if time step has decimals
+    this.decimals <- sapply(ptimes_mat[p,], get.decimalplaces)
+    fmt_vec <- fmt_vec0 #preserve original for next iteration
+    fmt_vec = sapply(1:length(this.decimals), #change number formatting for correct number of decimals
+                     function(x){ gsub(pattern = "0", replacement = this.decimals[x], fmt_vec[x]) })
     ptimes_mat_fmt[p, ] = sprintf(fmt = fmt_vec, ptimes_mat[p, ])
   }
   ptimes_mat_fmt = apply(ptimes_mat_fmt, MARGIN = 1, FUN = paste, collapse = "") #paste each row into one string
@@ -58,22 +52,22 @@ write.print.times   <- function(project.path,
     ptimes_mat_final = ptimes_mat_fmt
   }
 
-  #Update Max print value
-  mpl_ind = grep(pattern = " MPL", hydrus_input)
-  mpl_line = hydrus_input[(mpl_ind+1)]
-  mpl_line_split = unlist(strsplit(mpl_line, split = " ")) #split the line to get just MPL value
-  mpl_line_split[length(mpl_line_split)] = sprintf(fmt = "%2s", as.character(length(ptimes))) #MPL is always last in the line
-  mpl_line_new = paste(mpl_line_split, collapse = " ") #paste it back together
-  hydrus_input[(mpl_ind+1)] = mpl_line_new #overwrite previous line
+  # #Update Max print value - not needed. this is done now in write.time.settings based on length(print.at)
+  # # - the other values in this line were set in the parent write.time.settings function, Just MPL needs update here
+  # mpl_ind = grep(pattern = " MPL", hydrus_input)
+  # mpl_line = hydrus_input[(mpl_ind+1)]
+  # mpl_line_split = unlist(strsplit(mpl_line, split = " ")) #split the line to get just MPL value
+  # mpl_line_split[length(mpl_line_split)] = sprintf(fmt = "%2s", as.character(length(ptimes))) #MPL is always last in the line
+  # mpl_line_new = paste(mpl_line_split, collapse = " ") #paste it back together
+  # hydrus_input[(mpl_ind+1)] = mpl_line_new #overwrite previous line
 
-  #update tMin and tMax
-  tmax_ind = grep(" tMax", hydrus_input)
-  tmax_line = hydrus_input[(tmax_ind + 1)]
-  tmax_line_split = c(tmin, tmax)
-  tmax_line_new = sprintf(c("%11.0f", "%12.0f"), tmax_line_split)
-  tmax_line_new = paste(tmax_line_new, collapse = "")
-  hydrus_input[(tmax_ind + 1)] = tmax_line_new
-
+  # #update tMin and tMax - commneted out because moved to write_time_settings where the row of settings above is already made
+  # tmax_ind = grep(" tMax", hydrus_input)
+  # tmax_line = hydrus_input[(tmax_ind + 1)]
+  # tmax_line_split = c(tmin, tmax)
+  # tmax_line_new = sprintf(c("%11.0f", "%12.0f"), tmax_line_split)
+  # tmax_line_new = paste(tmax_line_new, collapse = "")
+  # hydrus_input[(tmax_ind + 1)] = tmax_line_new
 
   #these are the pieces for final output
   input_p1 = hydrus_input[1:Tprint_ind] #everything up to the TPrint block

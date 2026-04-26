@@ -15,14 +15,14 @@
 #' @param solutes Named vector. Not currently set up for solute simulations. This argument can be omitted and defaults will be set without soute modelling.
 #' vector names: "NumberOfSolutes", "MobileImmobile", "SolutionConc", "AdsorbedConc", "PrecipConc".  These are assigned to the Main section of HYDRUS1D.DAT.
 #' @param setup Named vector, each is integer. These are assigned to the Main section of HYDRUS1D.DAT. These can be omitted and PrintTimes will be
-#' calculated from times[["time.range"]] and times[["print.step"]], while InitialCondition's default of 0 (pressure head) will be assumed \cr
-#' PrintTimes = how many times will results be printed to output files such as Nod_Inf.OUT? \cr
+#' calculated from data in the 'times' argument, while InitialCondition's default of 0 (pressure head) will be assumed \cr
+#' PrintTimes = integer, length 1. how many times will results be printed to output files such as Nod_Inf.OUT? \cr
 #' InitialCondition = 0 or 1. Whether the water flow initial condition is specified in terms of pressure heads (0) or water contents (1).
 #' @param geometry Profile geometry info. Named vector: ProfileDepth, NumberOfNodes (number of discrete layers, i.e. rows in PROFILE.DAT),
 #' ObservationNodes (number of obs nodes). These are assigned to the Profile section of HYDRUS1D.DAT.
 #' @param grid Named vector. Not used. These seem to be Hydrus GUI settings. This argument can be omitted. Vector names: "GridVisible", "SnapToGrid",
 #' "ProfileWidth","LeftMargin","GridOrgX","GridOrgY","GridDX","GridDY". These would be assigned to the Profile section of HYDRUS1D.DAT.
-#' @param times Time settings. Named list: time.range1, time.range2, dt, dtMin, dtMax, DMul1, DMul2, ItRange1, ItRange2, print.step. See
+#' @param times Time settings. Named list: time.range1, time.range2, dt, dtMin, dtMax, DMul1, DMul2, ItRange1, ItRange2, print.step, print.at. See
 #' ?hydrusR::write.time.settings for details. These are the settings from the GUI sections for Time Information-Time Discretization and Water Flow-Iteration
 #' Criteria. These control iterations, time steps, run times, etc, and get written to Block C of SELECTOR.IN.
 #' @param sim simulation settings. Named list: MaxIt, TolTh, TolH, TopInf, BotInf, WLayer, KodTop, KodBot, InitCond, qGWLF, FreeD, SeepF,
@@ -78,7 +78,7 @@ create.H1D.project <- function(project.name,
                                times = list(time.range1 = 0, time.range2 = 2400,
                                             dt = 1e-3, dtMin = 1e-6, dtMax = 1,
                                             DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
-                                            print.step = 10),
+                                            print.step = 10, print.at = NULL),
                                sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1,
                                           TopInf = TRUE, BotInf = FALSE, WLayer = TRUE,
                                           KodTop = -1, KodBot = -1, InitCond = FALSE,
@@ -142,18 +142,18 @@ create.H1D.project <- function(project.name,
 
       if(dir_answer == "Y") {
         unlink(project_path, recursive = TRUE, force = TRUE)
-        dir.create(project_path)
+        dir.create(project_path, showWarnings = F)
       } else {
         stop("HYDRUS1D project not created")
       }
     } else { #else arg says to overwrite without asking
       cat("project_path automatically overwritten due to 'overwrite' argument.\n")
       unlink(project_path, recursive = TRUE, force = TRUE)
-      dir.create(project_path)
+      dir.create(project_path, showWarnings = F)
     }
 
   } else {
-    dir.create(project_path)
+    dir.create(project_path, showWarnings = F)
   }
 
 
@@ -174,7 +174,13 @@ create.H1D.project <- function(project.name,
 
   #calculate PrintTimes for inserting below
   # - this needs to depend on and agree with the data given in 'times'. The easiest way is to calc here:
-  setup[["PrintTimes"]] <- diff(c(times[["time.range1"]], times[["time.range2"]])) / times[["print.step"]]
+  if(!is.null(times[["print.at"]])){
+    setup[["PrintTimes"]] <- length(times[["print.at"]]) #it is the count of print.at times if they are given
+  } else {
+    #or it is the runtime divided by print.step if print.at is not given
+    setup[["PrintTimes"]] <- floor( diff(c(times[["time.range1"]], times[["time.range2"]])) / times[["print.step"]])
+  }
+
 
 
   #process arguments into a vector
@@ -333,8 +339,9 @@ create.H1D.project <- function(project.name,
                       dtMin = times[["dtMin"]],
                       dtMax = times[["dtMax"]],
                       DMul = c(times[["DMul1"]], times[["DMul2"]]),
-                      ItRange = c(times[["ItRange1"]],times[["ItRange1"]]),
-                      print.step = times[["print.step"]])
+                      ItRange = c(times[["ItRange1"]],times[["ItRange2"]]),
+                      print.step = times[["print.step"]],
+                      print.at = times[["print.at"]])
 
   #######
   #add soil params to SELECTOR.IN

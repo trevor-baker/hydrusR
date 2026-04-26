@@ -51,11 +51,18 @@ dir.copy<- function(src.dir, dest.dir, overwrite = TRUE, ask = FALSE, ...){
 #' get.decimalplaces(10.343434)
 
 get.decimalplaces <- function(x) {
-        if ((x %% 1) != 0) {
-                nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
-        } else {
-                return(0)
-        }
+  if(is.numeric(x)){
+    if(is.na(x)){ return(NA_integer_) }
+    if ((x %% 1) != 0) {
+      dec.val <- nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
+      return(dec.val)
+    } else {
+      return(0)
+    }
+  } else {
+    #else it is not numeric
+    return(NA_integer_)
+  }
 }
 ############
 #' Format number to scientific format according to HYDRUS inputs
@@ -99,4 +106,43 @@ format2sci<- function (x, ndec, power.digits, ...) {
 
 
 
+############
+#' aka unique()
+#'
+#' @param x  any vector class, any length
+#' @return vector of unique values
+#' @export
+#' @examples
+#' x <- c(1,1,1,2,3,4,5,5,5,5,5)
+#' u(x) #vector 1:5
+#' identical(unique(x), u(x)) #TRUE, both are 1:5
 
+u <- function(x){ unique(x) }
+
+
+############
+#' aka length(unique())
+#'
+#' @param x  any vector class, any length
+#' @return integer, how many unique values in the input
+#' @export
+#' @examples
+#' x <- c(1,1,1,2,3,4,5,5,5,5,5)
+#' lu(x) # 5
+#' identical(length(unique(x)), lu(x)) #TRUE, both are 5
+
+lu <- function(x){ length(unique(x)) }
+
+
+############
+#' aka sort(unique())
+#'
+#' @param x  any vector class, any length
+#' @return vector of unique values sorted with sort()
+#' @export
+#' @examples
+#' x <- c(10,1,1,1,2,3,4,5,5,5,5,5)
+#' su(x) # 1  2  3  4  5 10
+#' identical(sort(unique(x)), su(x)) #TRUE
+
+su <- function(x){ sort(unique(x)) }

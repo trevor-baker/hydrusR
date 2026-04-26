@@ -19,7 +19,10 @@ SpaceUnit = "cm" ## Space units
 TimeUnit = "hours" ## time units
 startTime = 0
 endTime = 2400
-time_step = 1
+print.at <- unique( c( 0.1, 0.5, 1, 5,
+                       seq(10,100,10),
+                       seq(100,endTime,100),
+                       endTime) )
 
 ##Simulation settings
 rwu = TRUE   #rootwater uptake - passed to create.H1D.project()
@@ -51,11 +54,11 @@ hCritS <- 0
 
 # soil inputs
 profile_depth = 200
-depth_vec = seq(0,200,1)
+depth_vec = seq(0,200,2)
 mat_num =   c(rep(1, length(which(depth_vec <= 100))), rep(2, length(which(depth_vec > 100))) )
 head_init = -1
 root_depth = 100
-rBeta = 0.962
+rBeta = 0 #0 = same root density at all rooting depths
 subregions = c(100,200) #one per matl
 obs_nodes = c(10,110,190)
 
@@ -169,7 +172,10 @@ create.H1D.project(project.name = project_name,
                    times = list(time.range1 = startTime, time.range2 = endTime,
                                 dt = 1e-3, dtMin = 1e-6, dtMax = 1,
                                 DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
+                                print.at = NULL,
                                 print.step = 10),
+                                # print.at = print.at,
+                                # print.step = NULL),
                    sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1,
                               TopInf = bc.args$TopInf, BotInf = bc.args$BotInf, WLayer = bc.args$WLayer,
                               KodTop = bc.args$KodTop, KodBot = bc.args$KodBot,
@@ -193,7 +199,7 @@ create.soil.profile(project.path = project_path,
                     root.depth = root_depth,
                     rBeta = rBeta,
                     mat = mat_num,
-                    head = head_init,
+                    Head = head_init,
                     obs.nodes = obs_nodes)
 
 
@@ -204,7 +210,7 @@ create.soil.profile(project.path = project_path,
 df.atm <- prep.H1D.climate(project.path = project_path,
                            TimeUnit = TimeUnit, SpaceUnit = SpaceUnit,
                            endTime = endTime,
-                           time_values = c(1200,2400),
+                           time_values = c(endTime/2, endTime),
                            Prec_values = c(0, 0.01),
                            PET_values =  c(0.01, 0),
                            trans.pc = 0.8)
@@ -232,21 +238,20 @@ create.bc(project.path = project_path,
 
 
 #to do:
-# - write a wrapper fn in IEGsoil to contain all of these and transfer the correct data.
-# -- prior to this just test simple loop of 2 simulations.
-# -- prior to this, try to simply replicate a freeD profile with no ATMOS data, then with constant (then variable) ATMOS data.
-# --- replicate the data prep, and then check results against GUI version of saem setup.
-# --- would be nice to test others, but I know all my work in near future will be freeD with and without Prec and ET.
-#
 # - still stuck on PrintTimes and atm times. these are tied together somehow. they are separate. not sure how I'm passing print times right now.
 
 hydrus.path <- "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"
 call.H1D(project.path, hydrus.path = hydrus.path, show.output = TRUE)
-
+library(ggplot2)
 #read these results vs those run in Hydrus GUI with same settings
-# - very close but not quite a match. unsure if it is enough to worry about and how different it might be with other soils/
+# - Initial summary: very close but not quite a match. unsure if it is enough to worry about and how different it might be with other soils/
+# - Conclusions: they are now the same. I had 3 differences causing them to be not quite saem and all are fixed:
+# -- number of soil layers (depth_vec was 200*1cm instead of 100*2cm like in GUI)
+# -- root density (was running simplifed Beta values in GUI because copying decimals not fun. switched to all 1s and 0s for both)
+# -- iteration settings - different min timestep, different ItRange. now both same
 df.this <- read.nod_inf(project.path)
 df.hyd <- read.nod_inf("C:/users/t/Documents/Hydrus1D/Examples/Direct/R-h1D_flow_example1")
+### NOTE - these are identical if I create the project with print.step = 10. if I use print.at, they aren't because different times printed.
 plot(df.this$Time[df.this$Depth == -10], df.this$Head[df.this$Depth == -10], type = "l", ylim = c(-1000,0))
 points(df.hyd$Time[df.hyd$Depth == -10], df.hyd$Head[df.hyd$Depth == -10], type = "l", col = "red")
 
@@ -256,10 +261,69 @@ points(df.hyd$Time[df.hyd$Depth == -50], df.hyd$Head[df.hyd$Depth == -50], type 
 plot(df.this$Time[df.this$Depth == -50], df.this$Moisture[df.this$Depth == -50], type = "l")
 points(df.hyd$Time[df.hyd$Depth == -50], df.hyd$Moisture[df.hyd$Depth == -50], type = "l", col = "red")
 
+#bind both results together
+df.both <- bind_rows(df.this %>% mutate(origin = "R"),
+                     df.hyd %>% mutate(origin = "GUI"))
+
+#plot Head over time
+df.both %>%
+  filter(Depth %in% seq(0,-200,-20)) %>%
+  ggplot(aes(x = Time, y = -Head, color = origin, group = Depth)) +
+  geom_line() +
+  scale_y_log10() +
+  theme_bw() +
+  facet_wrap(~Depth)
+#these are very close to identical but they aren't exactly same, which is easier to see by plotting just one depth:
+# these are now identical with recent changes
+df.both %>%
+  filter(Depth == -40) %>%
+  ggplot(aes(x = Time, y = -Head, color = origin, group = Depth)) +
+  geom_line() +
+  scale_y_log10() +
+  theme_bw()
+#I don't think the diffs are meaningful but I'm curious why they should exist at all if I am running identical settings in R and the GUI.
+df.this %>%
+  filter(Depth == 0, Time <= 20)
+df.hyd %>%
+  filter(Depth == 0, Time <= 20)
+
+#ensure they are running the same SWCC and K-h (again, only works if project created with print.at = NULL and print.step = 10)
+df.both %>%
+  filter(Depth %in% seq(0,-200,-20)) %>%
+  ggplot(aes(x = -Head, y = Moisture, color = origin, group = origin)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  facet_wrap(~Depth)
+#SWCCs look identical - they don't have much resollution near saturation because initial timesteps are 0 and 10 hours, but they follow same path
+df.both %>%
+  filter(Depth %in% seq(0,-200,-20)) %>%
+  ggplot(aes(x = -Head, y = K, color = origin, group = origin)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  scale_y_log10() +
+  facet_wrap(~Depth)
+#K-h curves also look identical.
+
+#try diffing their input files:
+# - ATMOSPH.IN
+a1 <- paste0(project.path,"/ATMOSPH.IN")
+a2 <- "C:/users/t/Documents/Hydrus1D/Examples/Direct/R-h1D_flow_example1/ATMOSPH.IN"
+diffr::diffr(a1, a2)
+# - no meaningful differences. I don't think that decimal place differences will have any effect
+# - SELECTOR.IN
+s1 <- paste0(project.path,"/SELECTOR.IN")
+s2 <- "C:/users/t/Documents/Hydrus1D/Examples/Direct/R-h1D_flow_example1/SELECTOR.IN"
+diffr::diffr(s1, s2)
+# - no meaningful differences that I can see.
+# - PROFILE.DAT
+p1 <- paste0(project.path,"/PROFILE.DAT")
+p2 <- "C:/users/t/Documents/Hydrus1D/Examples/Direct/R-h1D_flow_example1/PROFILE.DAT"
+diffr::diffr(p1, p2)
 
 
-##### Default hydrus path in Windows
-
+#did not use this because my simulation was short enough to use call.H1D directly (no loop needed)
 run.H1D.simulation(project.path = project_path,
                    profile.depth = profile_depth,
                    beginT = startTime, endT = endTime, deltaT = time_step,
@@ -278,20 +342,30 @@ run.H1D.simulation(project.path = project_path,
 
 #read outputs
 #####################
+# - these output checks are all relics from when I ran the original example that comes with hydrusR
+# - I should have switched scripts after successfully running that example before moving on to
+#     the example above.
+# - I'll keep this code here but it is redundant now.
 library(ggplot2)
 df.n <- read.nod_inf(project.path = project_path)
 # - this data really looks werid but maybe the example is nonsense?
 
 #Moisture over time.
+node.keep <- unique(df.n$Node)[round(seq(1, length(unique(df.n$Node)), length = 6),0)]
 df.n %>%
-  filter(Node %in% Node[seq(1,max(Node),length=6)]) %>%
+  filter(Node %in% node.keep) %>%
   ggplot(aes(x = Time, y = Moisture, color = -Depth, group = -Depth)) +
   geom_line() +
   facet_wrap(~-Depth)
 
 #Head over time
 df.n %>%
-  filter(Node %in% Node[seq(1,max(Node),length=6)]) %>%
-  ggplot(aes(x = Time, y = Head, color = -Depth, group = -Depth)) +
+  filter(Node %in% node.keep) %>%
+  ggplot(aes(x = Time, y = -Head, color = -Depth, group = -Depth)) +
   geom_line() +
+  scale_y_log10() +
   facet_wrap(~-Depth)
+
+
+
+#
