@@ -151,9 +151,7 @@ prep.H1D.climate <- function(project.path,
     if(max(time_values) != endTime){
       stop("time_values vector must end at 'endTime'.")
     }
-    if(is.null(PET_values) & is.null(Prec_values)){
-      stop("If time_values is given, then one or both of PET_values and Prec_values must be given.")
-    }
+
     if(!is.null(PET_values)){
       if(length(PET_values) != length(time_values)){
         stop("time_values and PET_values must be the same length.")
@@ -165,9 +163,14 @@ prep.H1D.climate <- function(project.path,
       }
     }
 
-    #if it made it this far without stopping, then there are valid vectors and the daily values, if any, should be overwritten to NULL
-    PET_mmd <- NULL
-    Prec_mmd <- NULL
+    if(is.null(PET_values) & is.null(Prec_values)){
+      cat("If 'time_values' is given, then one or both of 'PET_values' and 'Prec_values' is expected. 'time_values' will be ignored.\n")
+    } else {
+      #if it made it this far without stopping, then there are valid vectors and the daily mmd values, if any, should be overwritten to NULL
+      PET_mmd <- NULL
+      Prec_mmd <- NULL
+    }
+
   }
   if(!is.null(PET_values) | !is.null(PET_mmd)){
     #if there is PET, then transpc must be valid

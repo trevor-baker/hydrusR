@@ -88,7 +88,8 @@ create.H1D.project <- function(project.name,
                                            P0 = -10, P2H = -200, P2L = -800, P3 = -8000,
                                            POptm = -25, r2H = 0.5, r2L = 0.1),
                                #soil settings
-                               soil.para,
+                               soil.para = list( list(thr = 0.05, ths = 0.4, alpha = 0.3, n = 1.3, Ks = 5, l = 0.5) ), #one fake material for format example
+                               soil.df = data.frame(id = 1, h = c(-1e-3,-1e5), theta = c(0.4, 0.05), K = c(5,1e-8) ), #wet and dry endpoints showing proper df format.
                                soil.model = 0,
                                soil.hys = 0,
                                soil.slope = 0,
@@ -125,6 +126,13 @@ create.H1D.project <- function(project.name,
   #                           "GridOrgX","GridOrgY","GridDX","GridDY")))
 
 
+
+  #how many soil layers in this profile
+  if(!is.null(soil.para)){
+    nlayer <- length(soil.para)
+  } else {
+    nlayer <- ifelse(any(names(soil.df) == "id"), lu(soil.df$id), 1) #if no id column, assume 1 layer.
+  }
 
 
   #set up paths and file names
@@ -222,7 +230,7 @@ create.H1D.project <- function(project.name,
   # - it won't be here because these are derived from match.call, whereas PrintTimes is calculated within the fn
   args_vec["setup.PrintTimes"] <- as.character(setup[["PrintTimes"]])
   #add profile arg for material numbers
-  args_vec["profile.MaterialNumbers"] <- as.character(length(soil.para)) #number of list entries is number of materials
+  args_vec["profile.MaterialNumbers"] <- as.character(nlayer) #number of list entries is number of materials
 
 
   #edit names to those expected by Hydrus. these all have prefixes of their arg names. remove prefixes.
@@ -283,7 +291,7 @@ create.H1D.project <- function(project.name,
   selector_data[unit_lines] = c(SpaceUnit, TimeUnit)
 
   #update NMat, NLay, and Slope (CosAlpha)
-  nmat <- length(soil.para) # number of list elements is number of materials
+  nmat <- nlayer # number of list elements is number of materials
   soil.sub <- args_vec["SubregionNumbers"]
   slp <- cos(pracma::deg2rad(soil.slope))
   nmat_ind <- grep("NLay", selector_data)
@@ -348,7 +356,8 @@ create.H1D.project <- function(project.name,
   write.hydraulic.para(project.path = project_path,
                        model = soil.model,
                        hysteresis = soil.hys,
-                       para = soil.para)
+                       para = soil.para,
+                       vals = soil.df)
 
   #######
   #add root water stress params to SELECTOR.IN
@@ -356,7 +365,7 @@ create.H1D.project <- function(project.name,
                    model = root[["model"]],
                    compensated.uptake = root[["comp"]],
                    P0 = root[["P0"]], P2H = root[["P2H"]], P2L = root[["P2L"]], P3 = root[["P3"]],
-                   POptm = rep(root[["POptm"]], length(soil.para)), #replicate once per material
+                   POptm = rep(root[["POptm"]], nlayer), #replicate once per material
                    r2H = root[["r2H"]], r2L = root[["r2L"]])
 
   ######

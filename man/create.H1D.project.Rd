@@ -16,13 +16,16 @@ create.H1D.project(
   geometry = c(ProfileDepth = 200, NumberOfNodes = 4, ObservationNodes = 0),
   grid,
   times = list(time.range1 = 0, time.range2 = 2400, dt = 0.001, dtMin = 1e-06, dtMax = 1,
-    DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7, print.step = 10),
+    DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7, print.step = 10, print.at =
+    NULL),
   sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1, TopInf = TRUE, BotInf = FALSE, WLayer
     = TRUE, KodTop = -1, KodBot = -1, InitCond = FALSE, qGWLF = FALSE, FreeD = TRUE,
     SeepF = FALSE, DrainF = FALSE, hSeep = 0),
   root = list(model = 0, comp = 1, P0 = -10, P2H = -200, P2L = -800, P3 = -8000, POptm =
     -25, r2H = 0.5, r2L = 0.1),
-  soil.para,
+  soil.para = list(list(thr = 0.05, ths = 0.4, alpha = 0.3, n = 1.3, Ks = 5, l = 0.5)),
+  soil.df = data.frame(id = 1, h = c(-0.001, -1e+05), theta = c(0.4, 0.05), K = c(5,
+    1e-08)),
   soil.model = 0,
   soil.hys = 0,
   soil.slope = 0,
@@ -52,8 +55,8 @@ mass balances are included in this simulation. These are assigned to the Main se
 vector names: "NumberOfSolutes", "MobileImmobile", "SolutionConc", "AdsorbedConc", "PrecipConc".  These are assigned to the Main section of HYDRUS1D.DAT.}
 
 \item{setup}{Named vector, each is integer. These are assigned to the Main section of HYDRUS1D.DAT. These can be omitted and PrintTimes will be
-calculated from times[["time.range"]] and times[["print.step"]], while InitialCondition's default of 0 (pressure head) will be assumed \cr
-PrintTimes = how many times will results be printed to output files such as Nod_Inf.OUT? \cr
+calculated from data in the 'times' argument, while InitialCondition's default of 0 (pressure head) will be assumed \cr
+PrintTimes = integer, length 1. how many times will results be printed to output files such as Nod_Inf.OUT? \cr
 InitialCondition = 0 or 1. Whether the water flow initial condition is specified in terms of pressure heads (0) or water contents (1).}
 
 \item{geometry}{Profile geometry info. Named vector: ProfileDepth, NumberOfNodes (number of discrete layers, i.e. rows in PROFILE.DAT),
@@ -62,7 +65,7 @@ ObservationNodes (number of obs nodes). These are assigned to the Profile sectio
 \item{grid}{Named vector. Not used. These seem to be Hydrus GUI settings. This argument can be omitted. Vector names: "GridVisible", "SnapToGrid",
 "ProfileWidth","LeftMargin","GridOrgX","GridOrgY","GridDX","GridDY". These would be assigned to the Profile section of HYDRUS1D.DAT.}
 
-\item{times}{Time settings. Named list: time.range1, time.range2, dt, dtMin, dtMax, DMul1, DMul2, ItRange1, ItRange2, print.step. See
+\item{times}{Time settings. Named list: time.range1, time.range2, dt, dtMin, dtMax, DMul1, DMul2, ItRange1, ItRange2, print.step, print.at. See
 ?hydrusR::write.time.settings for details. These are the settings from the GUI sections for Time Information-Time Discretization and Water Flow-Iteration
 Criteria. These control iterations, time steps, run times, etc, and get written to Block C of SELECTOR.IN.}
 

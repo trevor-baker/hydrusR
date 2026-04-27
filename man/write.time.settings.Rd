@@ -12,7 +12,8 @@ write.time.settings(
   dtMax = 1,
   DMul = c(0.7, 1.3),
   ItRange = c(3, 7),
-  print.step
+  print.step = NULL,
+  print.at = NULL
 )
 }
 \arguments{
@@ -28,7 +29,12 @@ write.time.settings(
 
 \item{ItRange}{integer, length = 2. optimal iteration range. Sets parameters ItMin and ItMax.}
 
-\item{print.step}{integer, length = 1. the interval at which results will be printed (e.g. to "Nod_Inf.OUT"). in your project's time units.}
+\item{print.step}{integer, length = 1. the interval at which results will be printed (e.g. to "Nod_Inf.OUT"). in your project's time units. This is
+overruled by print.at, if given.}
+
+\item{print.at}{numeric vector, any length. the timesteps that results will be printed at. While 'print.step' causes printing at equal intervals,
+print.at enables printing at any timestep, which is ideal for capturing early results at a higher resolution and spacing results further as a
+simulation runs. e.g. print.at = c(0.1,0.5,1,5,10,50,100,200,300). If this is NULL, then print.step will be used to create regular print.at intervals.}
 }
 \description{
 These are the settings from Time Information-Time Discretization and Water Flow-Iteration Criteria in the Hydrus GUI. The time settings that control

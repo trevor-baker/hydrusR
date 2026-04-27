@@ -36,7 +36,7 @@ water at the maximum possible rate. Values must be given in the same order as th
 \item{r2H, r2L}{potential transpiration rates, in project units of length/time, associated with pressure heads between P0 and P2H, and between P2H and P2L, respectively.}
 }
 \description{
-These are the pressur eheads at which roots increase, decrease, or cease water uptake. Default values oif this function are for Hydrus' default setting,
+These are the pressure heads at which roots increase, decrease, or cease water uptake. Default values of this function are for Hydrus' default setting,
 which is a Feddes model with parameters for "Pasture (Wesseling, 1981)". Alternate values can be found by looking in the 'Root Water Uptake -
 Water Stress Reduction' menu of the Hydrus GUI. This function is currently not coded to process an S-shaped model.
 }

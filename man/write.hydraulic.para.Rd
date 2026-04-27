@@ -25,10 +25,8 @@ write.hydraulic.para(project.path, model = 0, hysteresis = 0, para, vals, ...)
 7 = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "AlfaIm", "nIm", "Omega")}
 
 \item{vals}{list of dataframes containing head, K, and theta values. one list entry per material. each entry has a 3 column dataframe in the
-project's length and time units, with names head, k, and theta, giving hydraulic conductivity (k) and volumetric water content (theta) values for
-head values (matric potentials) ranging from 0 to at least 1e5 cm.}
-
-\item{...}{}
+project's length and time units, with names h, K, and theta, giving hydraulic conductivity (K) and volumetric water content (theta) values for
+head values ranging from near-saturation (e.g., -1e-3) to at least -1e5 cm. Cannot have h=0 (saturation) because Hydrus will not accept h >= 0.}
 }
 \description{
 Write soil hydraulic parameters to selector.in

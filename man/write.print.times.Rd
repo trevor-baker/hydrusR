@@ -4,16 +4,12 @@
 \alias{write.print.times}
 \title{Update print times, MPL, tInit, and tMax in SELECTOR.IN}
 \usage{
-write.print.times(project.path, tmin, tmax, print.step, ...)
+write.print.times(project.path, print.at)
 }
 \arguments{
 \item{project.path}{Location of the H1D project in the directory}
 
-\item{tmin, tmax}{Numeric, length = 1. Beginning and ending times of this simulation, in this project's time units. tmin will not have results printed, the first
-print will be at tmin+print.step, and then at every print.step until tmax, i.e. seq(tmin+print.step, tmax, print.step). tmin does not need to be 0,
-it can be any value.}
-
-\item{print.step}{Numeric, length = 1. Time interval to print at, in this project's time units. This would be set in Hydrus GUI in Print Information-Print at Regular Time Interval}
+\item{print.at}{numeric vector, any length. The times to print results at, in this project's time units.}
 }
 \description{
 This function has two uses. To create a properly formatted TPrint block for SELECTOR.IN containing all times that values will be printed (e.g., to

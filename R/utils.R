@@ -83,9 +83,11 @@ format2sci<- function (x, ndec, power.digits, ...) {
                 dformat_sci = format(x, scientific = T)
                 dnum = unlist(strsplit(dformat_sci, "e"))
                 dnum_psign = substr(dnum[2], start = 1, stop = 1)
+
                 dnuml = dnum[1]
                 dnums = gsub(pattern = "\\+|\\-", replacement = "", x = dnum[2])
-                dnuml = format(as.numeric(dnuml), nsmall = ndec)
+
+                dnuml = format(round(as.numeric(dnuml),ndec), nsmall = ndec)
                 dnums = sprintf(fmt = paste0("e", dnum_psign, "%0",power.digits, "d"), as.numeric(dnums))
                 dformat_new = paste0(dnuml, dnums)
                 return(dformat_new)
@@ -116,7 +118,6 @@ format2sci<- function (x, ndec, power.digits, ...) {
 #' x <- c(1,1,1,2,3,4,5,5,5,5,5)
 #' u(x) #vector 1:5
 #' identical(unique(x), u(x)) #TRUE, both are 1:5
-
 u <- function(x){ unique(x) }
 
 
@@ -130,7 +131,6 @@ u <- function(x){ unique(x) }
 #' x <- c(1,1,1,2,3,4,5,5,5,5,5)
 #' lu(x) # 5
 #' identical(length(unique(x)), lu(x)) #TRUE, both are 5
-
 lu <- function(x){ length(unique(x)) }
 
 
@@ -144,5 +144,29 @@ lu <- function(x){ length(unique(x)) }
 #' x <- c(10,1,1,1,2,3,4,5,5,5,5,5)
 #' su(x) # 1  2  3  4  5 10
 #' identical(sort(unique(x)), su(x)) #TRUE
-
 su <- function(x){ sort(unique(x)) }
+
+
+############
+#' aka length()
+#'
+#' @param x  any vector class, any length
+#' @return integer, length of vector
+#' @export
+#' @examples
+#' x <- c(10,1,1,1,2,3,4,5,5,5,5,5)
+#' len(x) # 12
+#' identical(length(x), len(x)) #TRUE
+len <- function(x){ length(x) }
+
+#' Pipe operator
+#'
+#' move object from left-hand side into first argument of right-hand side function
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom dplyr %>%
+#' @usage lhs \%>\% rhs
+NULL
+

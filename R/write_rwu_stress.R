@@ -1,6 +1,6 @@
 #' Write root water uptake variables
 #'
-#' These are the pressur eheads at which roots increase, decrease, or cease water uptake. Default values oif this function are for Hydrus' default setting,
+#' These are the pressure heads at which roots increase, decrease, or cease water uptake. Default values of this function are for Hydrus' default setting,
 #' which is a Feddes model with parameters for "Pasture (Wesseling, 1981)". Alternate values can be found by looking in the 'Root Water Uptake -
 #' Water Stress Reduction' menu of the Hydrus GUI. This function is currently not coded to process an S-shaped model.
 #' @param project.path your project path, where SELECTOR.IN is saved.

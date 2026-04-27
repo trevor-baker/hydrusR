@@ -40,11 +40,11 @@ write.obs.nodes<- function(project.path, obs.nodes = NULL, ...) {
      num_obs_nodes = sprintf("%5.0f", 0)
 
   } else {
-     num_obs_nodes = sprintf("%5.0f", length(obs.nodes))
      if(max(obs.nodes) > profile_depth){
         cat ("omitting observation nodes deeper than  profile  depth ...\n" )
         obs.nodes = obs.nodes[obs.nodes <= profile_depth]
      }
+    num_obs_nodes = sprintf("%5.0f", length(obs.nodes))
   }
   #the last row in PROFILE.DAT gives the depths of the nodes
   nodes_fmt = sprintf(fmt = "%5.0f", obs.nodes)

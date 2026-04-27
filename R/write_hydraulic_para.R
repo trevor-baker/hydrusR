@@ -14,10 +14,8 @@
 #' 6 = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "Omega") \cr
 #' 7 = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "AlfaIm", "nIm", "Omega")
 #' @param vals list of dataframes containing head, K, and theta values. one list entry per material. each entry has a 3 column dataframe in the
-#' project's length and time units, with names head, k, and theta, giving hydraulic conductivity (k) and volumetric water content (theta) values for
-#' head values (matric potentials) ranging from 0 to at least 1e5 cm.
-#' @param ...
-#'
+#' project's length and time units, with names h, K, and theta, giving hydraulic conductivity (K) and volumetric water content (theta) values for
+#' head values ranging from near-saturation (e.g., -1e-3) to at least -1e5 cm. Cannot have h=0 (saturation) because Hydrus will not accept h >= 0.
 #' @return
 #' @export
 #'
@@ -26,7 +24,7 @@ write.hydraulic.para<- function(project.path,
                                 model = 0,
                                 hysteresis = 0,
                                 para,
-                                vals, ...) {
+                                vals,...) {
 
   # #names of the permitted models - not used but keep for explicit IDs
   # smr_models<- c("van Genuchten (VG)",
@@ -41,30 +39,58 @@ write.hydraulic.para<- function(project.path,
   #                                model = smr_models,
   #                                stringsAsFactors = F)
 
-  #make a dataframe of para
+
+
   if(!is.null(para)){
-    if(length(para)==1){ #if only one material then this needs to be processed with cbind
-      df.para <- do.call(cbind.data.frame, para)
-    } else {
-      df.para <- do.call(rbind.data.frame, para)
+
+    if(!is.null(vals)){
+      df.para <- NULL
+      para <- NULL
+      cat("Both soil parameters ('para') and values dataframe ('vals') are given. The dataframe will be used and soil parameters will be ignored.")
     }
-  } else {
+
+    model <- 0 #using only parameters
+
+  } #end !is.null(para)
+  if(is.null(para)){
+    #else check that there are values to use
     if(is.null(vals)){
       stop("Must give either para or vals.")
+    } else {
+
+      #else if there are vals, then use it to populate a trimmed down parameter table in the format needed
+      # when hydraulic functions are being read from lookup tables (method = 10)
+      para <- lapply(1:lu(vals$id), function(x){
+        this.vals <- vals[which(vals$id == u(vals$id)[x]),]
+        list(thr = round(min(this.vals$theta)*0.999,4),
+             ths = round(max(this.vals$theta)*1.001,4),
+             Ks = round(max(this.vals$K)*1.001,4))
+      })
+
+      model <- 10 #using tables
     }
+  } #end is.null(para)
+  #
+  #make a dataframe of para
+  if(length(para)==1){ #if only one material then this needs to be processed with cbind
+    df.para <- do.call(cbind.data.frame, para)
+  } else {
+    df.para <- do.call(rbind.data.frame, para)
   }
 
-  #parameter names for each model type
-  para_name_list = list("0" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
-                        "1" = c("thr", "ths", "Alfa", "n", "Ks", "l", "thm", "tha", "thk", "Kk"),
-                        "2" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
-                        "3" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
-                        "4" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
-                        "5" = c("thr", "ths", "Alfa", "n", "Ks", "l", "w2", "Alfa2", "n2"),
-                        "6" = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "Omega"),
-                        "7" = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "AlfaIm", "nIm", "Omega"))
 
-  #read in the SELECTOR file. needs to be made already by create.h1d.project()
+  if(!as.numeric(model) %in% c(0,10)) stop("Only soil model 0 (basic vG-M) or model 10 (lookup tables) are currently supported.")
+
+
+
+  #####
+  #The processing below will diverge depending on whether soil info is coming from vals table or generated from vGM params
+  # but first there are common steps to both paths, starting with SELECTOR.IN file
+
+
+  #read in the SELECTOR file.
+  # - needs to have been made already by create.h1d.project()
+  # - this will be modified by both the 'vals' and 'para' paths in processing below.
   input_data = readLines(con = file.path(project.path, "SELECTOR.IN"),
                          n = -1L,
                          encoding = "unknown")
@@ -87,48 +113,78 @@ write.hydraulic.para<- function(project.path,
   flow_block_len0 <- length(flow_block) #need for resizing at the end.
   model_line_ind = grep("Model", flow_block) #get index where model is declared. parameters are below this.
   #input_model_name = hydraulic_models[hydraulic_models$code == model, "model"] #name of the model - not used again, delete?
-  input_para_name = para_name_list[[as.character(model)]] #params expected by this model
-
-  stopifnot(identical(input_para_name, names(df.para)))
 
   #this line is where model number and hysteresis are declared
   model_line = flow_block[model_line_ind + 1]
   model_line_split = unlist(strsplit(model_line, split = " ")) #need to split out the spaces from the values
   non_empty = which(model_line_split != "") #these are the locations where values will be written
-  model_line_split[non_empty[1]] <- as.character(model)
+  model_line_split[non_empty[1]] <- ifelse(is.null(vals), "0", "10") #if no vals, then it is basic vGM (0), and if vals given then it is lookup table (10)
   model_line_split[non_empty[2]] <- as.character(hysteresis)
   model_line_new = paste(model_line_split, collapse = " ") #paste it back together to preserve spacing structure
   flow_block[model_line_ind+1] <- model_line_new #put the good values back in
 
-  #this line is where parameters are entered
-  para_line_ind = grep("thr|ths", flow_block) #the line with param names
-  para_name_fmt_vec = c("%6s", "%8s", "%8s", "%7s", "%11s", "%8s", "%9s", "%8s", "%11s", "%8s") #spacing format
-  para_line_fmt = mapply(FUN = sprintf, input_para_name, fmt = para_name_fmt_vec[1:length(input_para_name)]) #format the param names
-  para_line_new = paste(para_line_fmt, collapse = "") #make it a new line to be subbed back into the block below
-  flow_block[para_line_ind] <- para_line_new
-
-  # #old code that only permitted one material
-  # para_values =  unlist(para[input_para_name])
-  # value_format_vec = c("%7.4f", "%8.4f", "%8.4f", "%8.3f", "%11.5f", "%8.2f", "%8.3f", "%8.3f", "%11.3f", "%8.3f")
-  # para_values_fmt = sprintf(fmt = value_format_vec[1:length(para_values)], para_values)
-  # para_values_new = paste(para_values_fmt, collapse = "")
 
 
-  value_format_vec0 = c("%7._f", "%8._f", "%8._f", "%8._f", "%11._f", "%8._f", "%8._f", "%8._f", "%11._f", "%8._f") #spacing format for parameter values
-  #lapply through rows of df.para and apply formatting
-  para_values_list <- lapply(1:nrow(df.para), function(x){
-    this.para <- df.para[x,]
-    this.dec <- sapply(this.para, get.decimalplaces)
-    value_format_vec <- sapply(1:length(this.dec), function(x){ #fill in the blanks on the format vectoe
-      gsub("\\._f", paste(".",this.dec[x],"f"), value_format_vec0[x])
+
+
+  #if there are non-NULL 'vals', they will be used and para will be ignored
+  if(!is.null(vals)){
+
+    write.mater.in(project.path = project.path,
+                   df.val = vals)
+    #nothing else to do. model number is changed to 9 above, and then write the materials to MATER.IN
+
+  } #else {
+    #else this uses para, soil parameters
+    #parameter names for each model type
+    para_name_list = list("0" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
+                          "1" = c("thr", "ths", "Alfa", "n", "Ks", "l", "thm", "tha", "thk", "Kk"),
+                          "2" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
+                          "3" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
+                          "4" = c("thr", "ths", "Alfa", "n", "Ks", "l"),
+                          "5" = c("thr", "ths", "Alfa", "n", "Ks", "l", "w2", "Alfa2", "n2"),
+                          "6" = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "Omega"),
+                          "7" = c("thr", "ths", "Alfa", "n", "Ks", "l", "thrIm", "thsIm", "AlfaIm", "nIm", "Omega"),
+                          "10" = c("thr", "ths", "Ks")) #10 = when using lookup tables
+
+    #check that param names are correct
+    input_para_name = para_name_list[[as.character(model)]] #params expected by this model
+    stopifnot(identical(input_para_name, names(df.para)))
+
+    #this line is where parameters are entered
+    para_line_ind = grep("thr|ths", flow_block) #the line with param names
+    para_name_fmt_vec = c("%6s", "%8s", "%8s", "%7s", "%11s", "%8s", "%9s", "%8s", "%11s", "%8s") #spacing format
+    para_line_fmt = mapply(FUN = sprintf, input_para_name, fmt = para_name_fmt_vec[1:length(input_para_name)]) #format the param names
+    para_line_new = paste(para_line_fmt, collapse = "") #make it a new line to be subbed back into the block below
+    flow_block[para_line_ind] <- para_line_new
+
+    # #old code that only permitted one material
+    # para_values =  unlist(para[input_para_name])
+    # value_format_vec = c("%7.4f", "%8.4f", "%8.4f", "%8.3f", "%11.5f", "%8.2f", "%8.3f", "%8.3f", "%11.3f", "%8.3f")
+    # para_values_fmt = sprintf(fmt = value_format_vec[1:length(para_values)], para_values)
+    # para_values_new = paste(para_values_fmt, collapse = "")
+
+
+    value_format_vec0 = c("%7._f", "%8._f", "%8._f", "%8._f", "%11._f", "%8._f", "%8._f", "%8._f", "%11._f", "%8._f") #spacing format for parameter values
+    #lapply through rows of df.para and apply formatting
+    para_values_list <- lapply(1:nrow(df.para), function(x){
+      this.para <- df.para[x,]
+      this.dec <- sapply(this.para, get.decimalplaces)
+      value_format_vec <- sapply(1:length(this.dec), function(x){ #fill in the blanks on the format vectoe
+        gsub("\\._f", paste(".",this.dec[x],"f"), value_format_vec0[x])
+      })
+      para_val_fmt = sprintf(fmt = value_format_vec, this.para)
+      para_val_new = paste(para_val_fmt, collapse = "")
     })
-    para_val_fmt = sprintf(fmt = value_format_vec, this.para)
-    para_val_new = paste(para_val_fmt, collapse = "")
-  })
-  para_values_new <- do.call(c, para_values_list)
-  val.index <- (para_line_ind+1):(para_line_ind+1+(length(para_values_new)-1)) #flexible index because can be > 1 set of values
-  flow_block[val.index] <- para_values_new
+    para_values_new <- do.call(c, para_values_list)
+    val.index <- (para_line_ind+1):(para_line_ind+1+(length(para_values_new)-1)) #flexible index because can be > 1 set of values
+    flow_block[val.index] <- para_values_new
 
+  #} #end else
+
+
+  #now both paths are together again. even the vals path has a new flow_block because of
+  # changing the model number. flow_block is written into the input_data here:
   if(length(flow_block) == flow_block_len0){
     # #old code that assumed always one row of param values
     input_data[flow_block_ind : (time_block_ind - 1)] <- flow_block
@@ -144,4 +200,5 @@ write.hydraulic.para<- function(project.path,
   #write to SELECTOR.IN file
   write(input_data, file =  file.path(project.path, "SELECTOR.IN"), append = F)
 
-}
+
+} #end fn
