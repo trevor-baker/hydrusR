@@ -75,9 +75,18 @@ read.nod_inf<- function(project.path,
   options(warn = -1) #never want to see the NA warnings here
   for (col in colnames(nod_inf0)) data.table::set(nod_inf, j = col, value = as.numeric(nod_inf[[col]]))
   options(warn = warn.in)
+
+  #nod_inf = na.omit(nod_inf) #drop NAs to leave only data rows
+
+  ##trim time column for any data rows lost by na.omit
+  #nod_inf[, `:=`(Time, rep(times, each = length(nodes)))] #make a new column of times
+
+  #new code. the method above faisl if there are NAs anywhere in the data.
   nod_inf = na.omit(nod_inf) #drop NAs to leave only data rows
   nodes = sort(unique(nod_inf[["Node"]])) #get unique Node numbers
-  nod_inf[, `:=`(Time, rep(times, each = length(nodes)))] #make a new column of times
+  time.vec <- rep(times, each = length(nodes))
+  time.vec <- time.vec[1:nrow(nod_inf)]
+  nod_inf$Time <- time.vec
   nod_split = split(nod_inf, f = nod_inf$Time) #split table intoa list, one element per time
   nrow_split = sapply(nod_split, nrow) #rows of each dataset per time
 

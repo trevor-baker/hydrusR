@@ -1,36 +1,98 @@
-#Developing a function to run my typical intended MSc/IEGsoil simulation
-# - these are free draining, PET can be controlled by an argument, and they take tables of theta-h-K values as their inputs
-
+#' Run Hydrus simulation to generate data for plant-available water calculations
+#'
+#' Run simulations of a free-draining soil profile using tables of theta-h-K values as hydraulic function inputs.
+#' @returns if return.df=TRUE then a dataframe loaded from Nod_Inf.OUT is returned if simulation is successful. If FALSE, nothing is returned to console.
+#' @param
+#' @param project_path path to your project
+#' @param hydrus.path path to Hydrus exe files, e.g. "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx",
+#' @param TimeUnit your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+#' @param SpaceUnit: your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".
+#' @param df.val dataframe with theta, h, K, id columns. example here: read.csv( system.file("examples/df_val.csv", package = "hydrusR") ).
+#' see ?write.mater.in() for more detials and examples
+#' @param depth_vec numeric vector of depths, in SpaceUnit, for setting the nodes in the soil to be simulated. recommended spacing is 1-2 cm. e.g.,
+#' if SpaceUnit = "cm", then depth_vec=seq(0,100,1)
+#' @param mat_num integer vector with length(depth_vec)+1 (assign the +1 to the bottom material). valid values are 1:(lu(df.val$id)). if only one
+#' material, then enter 1 or leave NULL and 1 will be filled for all rows.
+#' @param startTime numeric, length = 1. starting time, in project TimeUnits. Usually this is 0.
+#' @param endTime numeric, length = 1. ending time, in project TimeUnits.
+#' @param rwu logical, length = 1. root water uptake enbaled (TRUE) or disabled (FALSE)
+#' @param root_depth numeric, length = 1. in SpaceUnit. How deep is rooting in this profile? only used if rwu = TRUE.
+#' @param rBeta numeric, length 1. see ?write.root.dist for examples. 0 = same root density at all rooting depths. 0.962 = former default. values
+#' should be either 0, or range from 0.9 to 0.99 for reasonable results. try: plot(1-rBeta^(rev(seq(0,root_depth,1)))
+#' @param WP = wilting point. in project length units. -8000 cm is Pasture default for Feddes root stress model.
+#' @param trans_pc numeric, length 1, value between 0 and 1. decimal percent for how much of PET should be assigned as potential transpiration. the
+#' remainder (1-trans_pc) is assigned as soil evaporation. Default = 1, meaning all PET is from roots.
+#' @param PET_mmd potential evapotranspiration rate, in mm/d (not in SpaceUnit/TimeUnit)
+#' @param Prec_mmd precipitation rate, in mm/d (not in SpaceUnit/TimeUnit)
+#' @param diurnal should PET be put on a diurnal pattern?
+#' @param head_init numeric, length 1. must be < 0. initial pressure head for all nodes, in SpaceUnit. Do not set this to 0 or solver likely will fail. if you want saturation, set it just below, e.g. -0.1 cm.
+#' @param hCritS numeric, length 1. maximum surface hydraulic head. if > 0, ponding can occur up to that depth in project length units. if zero, then no ponding, and runoff occurs immediately.
+#' @param return.df return dataframe loaded from Nod_Inf.OUT. if FALSE, nothing is returned to console.
+#' @author Trevor Baker <tbaker@iegconsuting.com>
 #' @examples
-#' df.val <- readRDS("calculation tools/awsc/r scripts/ieg awsc/under development/vG PTF/Hydrus/df_val.rds")
-#' df.out <- run.AWSC.sim(project_path = "C:/Users/t/Documents/temp/example_lookup", df.val = df.val, return.df = TRUE)
+#' df.val <- read.csv(system.file("examples/df_val.csv", package = "hydrusR"))
+#' df.out <- run.AWSC.sim(project_path = "C:/Users/t/Documents/temp/example_lookup", df.val = df.val, mat_num = 1, return.df = TRUE)
+#' #look at moisture over time in your results.
 #' df.out %>%
 #'   filter(Depth %in% seq(0,-200,-20)) %>%
 #'   ggplot(aes(x=Time, y = Moisture, color = Depth, group = Depth)) %>%
 #'   geom_path() +
 #'   scale_y_log10() +
 #'   scale_x_log10()
+#'
+#' #if you run the same simulation in Hydrus GUI, then you can compare results like this:
+#'   library(tidyverse)
+#'   df.hyd <- read.nod_inf("C:/users/t/Documents/Hydrus1D/Examples/Direct/R_example_lookup2") #your Hydrus GUI project
+#'
+#'   #bind both results together
+#'   df.both <- bind_rows(df.out %>% mutate(origin = "R"),
+#'                        df.hyd %>% mutate(origin = "GUI"))
+#'
+#'   #plot Head over time - should be identical - repeat with any  other parameter (Moisture, K, Flux,...)
+#'   df.both %>%
+#'     filter(Depth %in% seq(0,-200,-20)) %>%
+#'     ggplot(aes(x = Time, y = -Head, color = origin,
+#'                linetype = origin,
+#'                group = origin)) +
+#'     geom_line(alpha = 0.6, lwd = 1.8) +
+#'     scale_x_log10() +
+#'     scale_y_log10() +
+#'     theme_bw() +
+#'     facet_wrap(~Depth)
+#' @export
 
 run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_lookup",
                          hydrus.path = "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx",
-                         SpaceUnit = "cm", ## Space units
-                         TimeUnit = "hours", ## time units
-                         df.val, #dataframe with theta, h, K, id columns.
+                         SpaceUnit = "cm",
+                         TimeUnit = "hours",
+                         df.val,
                          depth_vec = seq(0,100,1),
-                         mat_num = c(rep(1,50),rep(2,51)), #integer vector with same length as depth_vec. or a single integer if only one material.
+                         mat_num = c(rep(1,50),rep(2,51)),
                          startTime = 0,
                          endTime = 4800,
                          rwu = TRUE,
+                         root_depth = 100,
+                         rBeta = 0,
+                         WP = -8000,
                          trans_pc = 1,
                          PET_mmd = 0,
                          Prec_mmd = 0,
+                         diurnal = FALSE,
                          head_init = -1,
-                         hCritS = 0, #if > 0, ponding can occur up to that depth in project length units. if zero, then no ponding, and runoff occurs immediately.
-                         root_depth = 100,
-                         rBeta = 0, #0 = same root density at all rooting depths
-                         WP = -8000, #wiling point. in project length units. -8000 cm is Pasture default for Feddes root stress model.
-                         return.df = FALSE #return dataframe of results loaded from Nod_Inf.OUT
-                         ){
+                         hCritS = 0,
+                         return.df = FALSE ){
+
+  # #sample df.val for debug
+  # df.val <- read.csv(system.file("examples/df_val.csv", package = "hydrusR"))
+
+  if(head_init == 0){
+    head_init <- -0.1
+    cat("head_init cannot be zero. set to -0.1\n") }
+  head_init <- -abs(head_init) #force to negative.
+
+  project_path <- gsub("//", "/", gsub("\\\\", "/", project_path)) #ensure all are forward slashes
+  parent_dir <- gsub("/[^/]*$", "/", project_path) #strip off project name
+  project_name <- gsub(parent_dir, "", project_path) #keep only project name
 
 
   print.at <- unique( c( sort( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-3,0,1) })) ), #0.001,0.005,0.01, etc.
@@ -62,6 +124,8 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
 
   #if not given, then fill all as same.
   if(is.null(mat_num)){
+    mat_num <- rep(1, length(depth_vec))
+  } else if(length(mat_num)==1){
     mat_num <- rep(1, length(depth_vec))
   }
 
@@ -106,8 +170,6 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
 
   ####################################################
   # Create project, input files, and run Hydrus
-
-
 
   create.H1D.project(project.name = project_name,
                      parent.dir = parent_dir,
@@ -155,6 +217,7 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
   df.atm <- prep.H1D.climate(project.path = project_path,
                              TimeUnit = TimeUnit, SpaceUnit = SpaceUnit,
                              endTime = endTime,
+                             diurnal = diurnal,
                              Prec_mmd = Prec_mmd,
                              PET_mmd = PET_mmd,
                              trans.pc = trans_pc)
@@ -169,7 +232,6 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
             bot.bc.type = NULL,
             bot.bc.value = NULL)
 
-  hydrus.path <- "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"
   call.H1D(project_path, hydrus.path = hydrus.path, show.output = TRUE)
 
   if(return.df){

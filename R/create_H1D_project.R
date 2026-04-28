@@ -8,10 +8,11 @@
 #' assumed to be FALSE. These are assigned to the Main section of HYDRUS1D.DAT.
 #' @param units named vector giving units for this project, length = 2 (TimeUnit, SpaceUnit), each is a character string.  These are assigned to the
 #' Main section of HYDRUS1D.DAT. \cr
-#' TimeUnit: simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
-#' SpaceUnit: vertical spatial unit (default = "cm"). permitted: "mm", "cm", "m".
+#' TimeUnit: your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+#' SpaceUnit: your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".
 #' @param profile information about the soil profile. Named vector "SubregionNumbers", value is integer length = 1, telling how many subregions for
-#' mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT.
+#' mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT. This formerly held a value "MaterialNUmbers" but
+#' it is now calculated from the soil information given in soil.df or soil.para.
 #' @param solutes Named vector. Not currently set up for solute simulations. This argument can be omitted and defaults will be set without soute modelling.
 #' vector names: "NumberOfSolutes", "MobileImmobile", "SolutionConc", "AdsorbedConc", "PrecipConc".  These are assigned to the Main section of HYDRUS1D.DAT.
 #' @param setup Named vector, each is integer. These are assigned to the Main section of HYDRUS1D.DAT. These can be omitted and PrintTimes will be
@@ -29,8 +30,12 @@
 #' DrainF, hSeep. See ?hydrusR::write.sim.settings for details.
 #' @param root Root water uptake stress parameters. Named list: model, comp, P0, P2H, P2L, P3, POptm, r2H, r2L. See ?hydrusR::write.rwu.stress for
 #' details.
-#' @param soil.para List of soil hydraulic parameters, one entry per material to be included in simulation. See ?hydrusR::write.hydraulic.para for details.
-#' @param soil.model integer, 0-7. identifies the soil model to be used. 0 = standard van Genuchten-Mualem. See ?hydrusR::write.hydraulic.para for details.
+#' @param soil.df dataframe of theta-h-K values. four columns: 'theta', 'h' 'K' and 'id'. 'id' is an integer from 1:(count of soil materials). h
+#' should span at least from -1e-2 to -1e5 cm. All of these values must be in project units, which by default are cm and hours, but note that ROSETTA
+#' outputs and IEGsoil functions work in cm/day and require conversion prior to being assigned as 'soil.df'.
+#' @param soil.para List of soil hydraulic parameters, one entry per material to be included in simulation. if 'soil.df' is given, this is ignored. See ?hydrusR::write.hydraulic.para for details.
+#' @param soil.model integer, 0-7 or 10. identifies the soil model to be used. 0 = standard van Genuchten-Mualem. 10 = from lookup tables (soil.df).
+#' Other options not currently enabled. See ?hydrusR::write.hydraulic.para for details.
 #' @param soil.hys include hysteresis in simulation? integer. 0 = No, 1 = Yes.
 #' @param soil.sub integer, length = 1. how many subregions (aka "Lay" in PROFILE.DAT) does this profile have? the number of subregions for
 #' mass balance calculations.
@@ -127,14 +132,6 @@ create.H1D.project <- function(project.name,
 
 
 
-  #how many soil layers in this profile
-  if(!is.null(soil.para)){
-    nlayer <- length(soil.para)
-  } else {
-    nlayer <- ifelse(any(names(soil.df) == "id"), lu(soil.df$id), 1) #if no id column, assume 1 layer.
-  }
-
-
   #set up paths and file names
   project_path = file.path(parent.dir, project.name)
   descript_file = file.path(project_path, "DESCRIPT.TXT")
@@ -189,6 +186,12 @@ create.H1D.project <- function(project.name,
     setup[["PrintTimes"]] <- floor( diff(c(times[["time.range1"]], times[["time.range2"]])) / times[["print.step"]])
   }
 
+  #how many soil layers in this profile
+  if(!is.null(soil.para)){
+    nlayer <- length(soil.para)
+  } else {
+    nlayer <- ifelse(any(names(soil.df) == "id"), lu(soil.df$id), 1) #if no id column, assume 1 layer.
+  }
 
 
   #process arguments into a vector
@@ -217,17 +220,33 @@ create.H1D.project <- function(project.name,
     args_vec0 <- args_vec0[-sim.args]
   }
 
-  #deal with remaining arguments to make them into a named vector that can be subbed in the for(a in _) loop below.
-  args_vec = lapply(args_vec0[-1], FUN = function(x) unlist(x))
-  # args_vec = unlist(unclass(args_vec))
-  args_vec = do.call("c", args_vec) #this sets the values properly
+
+  args_list <- args_vec0[-1] #drop function name. args start at index 2
+  args_eval <- NULL
+  for(xx in 1:length(args_list)){
+    eval0 <- eval.parent(args_list[[xx]])
+    if(is.null(names(eval0))){
+      names(eval0) <- names(args_list)[xx] #simple args (not part of vector or list) need to carry their argument name. it is needed below for assigning values
+    } else {
+      names(eval0) <- paste0(names(args_list)[xx],".",names(eval0)) #insert name of parent argument to match previous formatting
+    }
+    args_eval[[xx]] <- eval0
+  } #end xx loop (cannot do this in lapply, eval.parent doesn't work.)
+  args_vec <- do.call(c, args_eval)
+    ## old method stopped working, wasn't able to get evaluated arguments from parent frame. In hindsight, I think
+    ##   it is related to create.H1D.project now being housed inside of run.AWSC.sim so the call stack was different
+    ##   than running creaet.H1D.proj as a standalone.
+    # #deal with remaining arguments to make them into a named vector that can be subbed in the for(a in _) loop below.
+    # args_vec = lapply(args_vec0[-1], FUN = function(x) unlist(x))
+    # # args_vec = unlist(unclass(args_vec))
+    # args_vec = do.call("c", args_vec) #this sets the values properly
   args_vec = ifelse(args_vec == TRUE, 1, args_vec) #convert logicals to numeric to match Hydrus input format
   args_vec = ifelse(args_vec == FALSE, 0, args_vec)
 
 
   #Manually edit a few args values that do not come from the function call.
   #sub in the updated PrintTimes value
-  # - it won't be here because these are derived from match.call, whereas PrintTimes is calculated within the fn
+  # - it won't be here because these are derived from match.call, whereas PrintTimes is set within this fn before here.
   args_vec["setup.PrintTimes"] <- as.character(setup[["PrintTimes"]])
   #add profile arg for material numbers
   args_vec["profile.MaterialNumbers"] <- as.character(nlayer) #number of list entries is number of materials
@@ -288,7 +307,8 @@ create.H1D.project <- function(project.name,
   #update units
   lunit_ind = grep("LUnit", selector_data)
   unit_lines = lunit_ind + 1:2
-  selector_data[unit_lines] = c(SpaceUnit, TimeUnit)
+  selector_data[unit_lines] = c(as.character( args_vec["SpaceUnit"] ),
+                                as.character( args_vec["TimeUnit"] ))
 
   #update NMat, NLay, and Slope (CosAlpha)
   nmat <- nlayer # number of list elements is number of materials
@@ -352,6 +372,7 @@ create.H1D.project <- function(project.name,
                       print.at = times[["print.at"]])
 
   #######
+  Sys.sleep(0.1)
   #add soil params to SELECTOR.IN
   write.hydraulic.para(project.path = project_path,
                        model = soil.model,
@@ -360,6 +381,7 @@ create.H1D.project <- function(project.name,
                        vals = soil.df)
 
   #######
+  Sys.sleep(0.1)
   #add root water stress params to SELECTOR.IN
   write.rwu.stress(project.path = project_path,
                    model = root[["model"]],
@@ -369,6 +391,7 @@ create.H1D.project <- function(project.name,
                    r2H = root[["r2H"]], r2L = root[["r2L"]])
 
   ######
+  Sys.sleep(0.1)
   #add simulation settings to SELECTOR.IN
   write.sim.settings(project.path = project_path,
                      MaxIt = sim[["MaxIt"]],

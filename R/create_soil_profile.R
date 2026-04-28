@@ -70,7 +70,11 @@ create.soil.profile <- function(project.path,
     stop("depth.vec must span from 0 to profile.depth")
   }
   if(length(mat) != length(depth.vec) & length(mat) != 1){
-    stop("length of mat must be the same as length of depth.vec. One identifying integer per layer.")
+    if(length(mat) == (length(depth.vec)-1) ){
+      mat <- c(mat, mat[length(mat)]) #fill the last material for the final unfilled node.
+    } else {
+      stop("length of mat must be the same as length of depth.vec. One identifying integer per layer.")
+    }
   } else if (length(mat) == 1){
     mat <- rep(mat, length(depth.vec))
   }
@@ -205,7 +209,7 @@ create.soil.profile <- function(project.path,
   #write PROFILE.DAT, which may be modified below by subsequent functions
   write(profile_data_new, file = profile_file, append = FALSE)
 
-
+  Sys.sleep(0.1)
   #Run modifying functions
   ########################
 
@@ -222,6 +226,7 @@ create.soil.profile <- function(project.path,
   # h1d_dat[h1d_indx] <- h1d_sr
   # write(h1d_dat, file = h1d_path, append = FALSE)
 
+  Sys.sleep(0.1)
   #edit rooting profile (Beta column)
   write.root.dist(project.path = project.path,
                   root.depth = root.depth,

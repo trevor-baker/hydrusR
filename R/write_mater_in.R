@@ -5,34 +5,35 @@
 #' values.
 #' @param project.path the path to your Hydrus project.
 #' @param df.val dataframe with theta, h, and K columns, and an 'id' column if more than one material is represented. all data must be in project
-#' length and time units.
+#' length and time units. h should span at least from -1e-2 cm to -1e-5 cm.
 #' @param df.texture dataframe with sand, silt, clay, and (optional) Db columns, in that order. 3 or 4 column, any number of rows. These will be run
-#' through version 3 of ROSETTA to get van Genuchten-Mualem parameters to generate theta-h-K tables.
-#' @param TimeUnit
-#' @param SpaceUnit
+#' through version 3 of ROSETTA to get van Genuchten-Mualem parameters to generate theta-h-K tables. ignored if df.val given.
+#' @param TimeUnit your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+#' @param SpaceUnit your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".
 #' @return nothing returned to console. MATER.IN file is written to project.path
 #' @export
 
 write.mater.in <- function(project.path,
                            df.val,
-                           df.texture = data.frame(sand = 70, silt = 20, clay = 5),...){
-
-                           # TimeUnit,
-                           # SpaceUnit
-  #cm/d units converted to project units:
-  T.multiple <- c(24*60*60, 24*60, 24, 1)[which(c("seconds","minutes","hours","days") == TimeUnit)]
-  L.multiple <- c(10, 1, 0.01)[which(c("mm","cm","m") == TimeUnit)]
-  LT.multiple <- L.multiple / T.multiple
-  #example
-  #T.project <- T.days * T.multiple
-  #L.project <- L.cm  * L.multiple
-  #LT.project <- LT.cmd * LT.multiple
+                           df.texture = data.frame(sand = 70, silt = 20, clay = 5),
+                           TimeUnit = parent.frame()$TimeUnit,
+                           SpaceUnit = parent.frame()$SpaceUnit,
+                           ...){
 
 
   #if no df.val given, then create from ROSETTA
   if(is.null(df.val)){
     if(is.null(rosetta.vals)) stop("Must give either df.val or rosetta.vals")
 
+
+    #cm/d units converted to project units:
+    T.multiple <- c(24*60*60, 24*60, 24, 1)[which(c("seconds","minutes","hours","days") == TimeUnit)]
+    L.multiple <- c(10, 1, 0.01)[which(c("mm","cm","m") == SpaceUnit)]
+    LT.multiple <- L.multiple / T.multiple
+    #example
+    #T.project <- T.days * T.multiple
+    #L.project <- L.cm  * L.multiple
+    #LT.project <- LT.cmd * LT.multiple
 
 
     vars <- names(df.texture)
@@ -108,6 +109,15 @@ write.mater.in <- function(project.path,
     df.v <- df.v[,-which(names(df.v)=="id")] #don't need id column from here.
 
 
+    #df.v needs to be trimmed to unique values, cannot have duplicate values in consecutive rows
+    # if round(theta,5) is not duplicated then K and h will definitely not be.
+    df.v <- df.v %>%
+      dplyr::mutate(theta = round(theta, 5)) %>%
+      dplyr::distinct_at(.vars = "theta", .keep_all = TRUE)
+
+
+
+
     #for each material, these lines repeat:
     # 1) header, 3 lines
     #   - 2 lines are "NTab"; nrow(data)
@@ -122,7 +132,7 @@ write.mater.in <- function(project.path,
     #set up the table block's structure
     nrows <- nrow(df.v)
     df.fmt <- df.v
-    df.fmt$theta <- as.character(round(df.v$theta, 4)) #MATER.IN formatting in user manual has 4 decimals. I am seeing if 5 will work to reduce duplicate theta values
+    df.fmt$theta <- as.character(df.v$theta) #MATER.IN formatting in user manual has 4 decimals. I am seeing if 5 will work to reduce duplicate theta values
     df.fmt$h <- hydrusR::format2sci(df.v$h, 2, 2)
     df.fmt$K <- hydrusR::format2sci(df.v$K, 2, 2)
     df.fmt <- df.fmt[,c("theta","h","K")]

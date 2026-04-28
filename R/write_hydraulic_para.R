@@ -16,6 +16,8 @@
 #' @param vals list of dataframes containing head, K, and theta values. one list entry per material. each entry has a 3 column dataframe in the
 #' project's length and time units, with names h, K, and theta, giving hydraulic conductivity (K) and volumetric water content (theta) values for
 #' head values ranging from near-saturation (e.g., -1e-3) to at least -1e5 cm. Cannot have h=0 (saturation) because Hydrus will not accept h >= 0.
+#' @param TimeUnit your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+#' @param SpaceUnit your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".
 #' @return
 #' @export
 #'
@@ -24,7 +26,9 @@ write.hydraulic.para<- function(project.path,
                                 model = 0,
                                 hysteresis = 0,
                                 para,
-                                vals,...) {
+                                vals,
+                                TimeUnit = parent.frame()$TimeUnit,
+                                SpaceUnit = parent.frame()$SpaceUnit, ...) {
 
   # #names of the permitted models - not used but keep for explicit IDs
   # smr_models<- c("van Genuchten (VG)",
@@ -64,7 +68,7 @@ write.hydraulic.para<- function(project.path,
         this.vals <- vals[which(vals$id == u(vals$id)[x]),]
         list(thr = round(min(this.vals$theta)*0.999,4),
              ths = round(max(this.vals$theta)*1.001,4),
-             Ks = round(max(this.vals$K)*1.001,4))
+             Ks = round(max(this.vals$K)*1.001,3))
       })
 
       model <- 10 #using tables

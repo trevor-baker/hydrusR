@@ -180,11 +180,15 @@ prep.H1D.climate <- function(project.path,
   }
 
 
+
+
   ###
   # prep daily_mmd values
   # - if these made it to here as non-NULL (i.e., time_values and PET/Prec_values were not given), then these need to be processed
   #     into vectors for df.clim
   if(!is.null(PET_mmd)){
+
+    if(PET_mmd == 0){ diurnal <- FALSE } #no point to diurnal data if all are zero.
 
     #split into dirunal if necessary and requested
     if(TimeUnit %in% c("seconds","minutes","hours")){ #diurnal only matters if time unit is shorter than a day
@@ -192,12 +196,13 @@ prep.H1D.climate <- function(project.path,
         PET_values.mmd <- pet.hourly(PET_mmd, hours = diurnal.hours[1]:diurnal.hours[2]) #this splits PET into length per hour starting from length per day.
         PET_values.mmd <- PET_values.mmd$pet #get just the vector, not dataframe
         PET_values.mmd <- PET_values.mmd * 24 #need to keep units in mm/d for now. it will be converted below to project units.
+        time_values <- 1:24
       } else {
-        #else it is an even 24 hour vector
-        PET_values.mmd <- rep(PET_mmd, 24) #in mm/d units
+        #else is same for all times
+        PET_values.mmd <- PET_mmd
+        time_values <- 1
       }
-      #in either case, diurnal or flat, set time_values as 1:24 to start. the PET_values above will always be one per hour here.
-      time_values <- 1:24
+
 
     } else {                #longer time unit gets
       PET_values.mmd <- PET_mmd # one single value in mm/d
@@ -232,7 +237,9 @@ prep.H1D.climate <- function(project.path,
     #this is a bit confusing because intuitively it seems like it should be the number of TimeUnits in a day (because
     # PET originally came as mm/d). However, time_mult needs to be divided by 24 for seconds, minutes, and hours because their
     # time_values are hourly (length = 24)
-    if(TimeUnit %in% c("seconds", "minutes","hours")){
+    if(TimeUnit %in% c("seconds", "minutes","hours") &
+       length(PET_values.LT)>1 ){
+
       time_values <- time_values * time_mult/24
 
       #replicate each hours in vector of hourly values to its correct length to align with TimeUnit
@@ -253,6 +260,7 @@ prep.H1D.climate <- function(project.path,
 
     } else {
       #if this is days or years, then the final step is very easy.
+      # same with if there is no diurnal/hourly data and length PET_values = 1.
       # the data is simply one value, it is in correct units already, and because this is a flat _mmd format, this value
       #   extends to the very end of the simulation
       time_values <- endTime
@@ -275,7 +283,8 @@ prep.H1D.climate <- function(project.path,
   if(!is.null(Prec_mmd)){
 
     #split into dirunal if necessary and requested
-    if(TimeUnit %in% c("seconds","minutes","hours")){ #diurnal only matters if time unit is shorter than a day
+    if(TimeUnit %in% c("seconds","minutes","hours") &
+       length(PET_values.mmd)>1 ){ #only need to rep these into 24 hourly values if PET was done that way previously
 
       #there is no diurnal for Precip so this step is simpler than for PET_mmd
       Prec_values.mmd <- rep(Prec_mmd, 24) #in mm/d units
@@ -315,7 +324,8 @@ prep.H1D.climate <- function(project.path,
     #this is a bit confusing because intuitively it seems like it should be the number of TimeUnits in a day (because
     # PET originally came as mm/d). However, time_mult needs to be divided by 24 for seconds, minutes, and hours because their
     # time_values are hourly (length = 24)
-    if(TimeUnit %in% c("seconds", "minutes","hours")){
+    if(TimeUnit %in% c("seconds", "minutes","hours") &
+       length(Prec_values.LT)>1 ){
       time_values <- time_values * time_mult/24
 
       #replicate each hours in vector of hourly values to its correct length to align with TimeUnit
