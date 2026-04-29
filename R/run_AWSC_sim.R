@@ -15,6 +15,12 @@
 #' material, then enter 1 or leave NULL and 1 will be filled for all rows.
 #' @param startTime numeric, length = 1. starting time, in project TimeUnits. Usually this is 0.
 #' @param endTime numeric, length = 1. ending time, in project TimeUnits.
+#' @param dt numeric, length 1. initial timestep. default = 1e-3
+#' @param dtMin numeric, length 1. minimum allowed timestep. default = 1e-6
+#' @param dtMax numeric, length 1. maximum allowed timestep. default = 1.
+#' @param MaxIt max iterations for solver. default = 100
+#' @param TolTh theta tolerance in solver. default = 0.001
+#' @param TolH head tolerance in solver. in project SpaceUnit. default = 1 cm.
 #' @param rwu logical, length = 1. root water uptake enbaled (TRUE) or disabled (FALSE)
 #' @param root_depth numeric, length = 1. in SpaceUnit. How deep is rooting in this profile? only used if rwu = TRUE.
 #' @param rBeta numeric, length 1. see ?write.root.dist for examples. 0 = same root density at all rooting depths. 0.962 = former default. values
@@ -70,6 +76,12 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
                          mat_num = c(rep(1,50),rep(2,51)),
                          startTime = 0,
                          endTime = 4800,
+                         dt = 1e-4,
+                         dtMin = 1e-6,
+                         dtMax = 1,
+                         MaxIt = 100,
+                         TolTh = 0.001,
+                         TolH = 1,
                          rwu = TRUE,
                          root_depth = 100,
                          rBeta = 0,
@@ -95,13 +107,14 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
   project_name <- gsub(parent_dir, "", project_path) #keep only project name
 
 
-  print.at <- unique( c( sort( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-3,0,1) })) ), #0.001,0.005,0.01, etc.
+  print.at <- unique( c( sort( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-4,0,1) })) ), #0.0001,0.0002,0.0005,0.001, etc.
                          seq(10,1000,10),
                          seq(1000,1e5,100),
                          endTime) )
   if(any(print.at > endTime)){
     print.at <- print.at[which(print.at <= endTime)]   #make sure it ends on time.
   }#end if
+
   ##Simulation settings
   maxIt <- 100
   ## atmosphere
@@ -183,11 +196,11 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
                                   NumberOfNodes = length(depth_vec),
                                   ObservationNodes = length(obs_nodes)),
                      times = list(time.range1 = startTime, time.range2 = endTime,
-                                  dt = 1e-3, dtMin = 1e-6, dtMax = 1,
+                                  dt = dt, dtMin = dtMin, dtMax = dtMax,
                                   DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
                                   print.at = print.at,
                                   print.step = NULL),
-                     sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1,
+                     sim = list(MaxIt = MaxIt, TolTh = TolTh, TolH = TolH,
                                 TopInf = bc.args$TopInf, BotInf = bc.args$BotInf, WLayer = bc.args$WLayer,
                                 KodTop = bc.args$KodTop, KodBot = bc.args$KodBot,
                                 InitCond = FALSE, qGWLF = FALSE,

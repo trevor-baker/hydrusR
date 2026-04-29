@@ -35,7 +35,9 @@ write.print.times   <- function(project.path,
   ptimes_mat_fmt <- ptimes_mat #make a copy of the matrix that will be formatted below
   for(p in 1:nrow(ptimes_mat_fmt)){
     #adjust formatting if time step has decimals
+    options(scipen = 999) #temporary so get.decimalplaces doesn't fail on sci notation
     this.decimals <- sapply(ptimes_mat[p,], get.decimalplaces)
+    options(scipen = 0)
     fmt_vec <- fmt_vec0 #preserve original for next iteration
     fmt_vec = sapply(1:length(this.decimals), #change number formatting for correct number of decimals
                      function(x){ gsub(pattern = "0", replacement = this.decimals[x], fmt_vec[x]) })
