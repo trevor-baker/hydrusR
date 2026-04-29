@@ -43,6 +43,7 @@ write.rwu.stress <- function(project.path,
 
   #####
   # read data
+  Sys.sleep(0.5)
   input_data = readLines(con = file.path(project.path, "SELECTOR.IN"),
                          n = -1L, encoding = "unknown")
 
@@ -89,6 +90,7 @@ write.rwu.stress <- function(project.path,
   input_data[rwu_start_ind : rwu_end_ind] <- this_block
 
   #save the file
+  Sys.sleep(0.5)
   write(input_data,
         file =  file.path(project.path, "SELECTOR.IN"),
         append = F)

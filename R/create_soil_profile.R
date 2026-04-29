@@ -209,7 +209,7 @@ create.soil.profile <- function(project.path,
   #write PROFILE.DAT, which may be modified below by subsequent functions
   write(profile_data_new, file = profile_file, append = FALSE)
 
-  Sys.sleep(0.1)
+  Sys.sleep(0.3)
   #Run modifying functions
   ########################
 
@@ -226,7 +226,7 @@ create.soil.profile <- function(project.path,
   # h1d_dat[h1d_indx] <- h1d_sr
   # write(h1d_dat, file = h1d_path, append = FALSE)
 
-  Sys.sleep(0.1)
+  Sys.sleep(0.3)
   #edit rooting profile (Beta column)
   write.root.dist(project.path = project.path,
                   root.depth = root.depth,

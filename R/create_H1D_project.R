@@ -372,7 +372,7 @@ create.H1D.project <- function(project.name,
                       print.at = times[["print.at"]])
 
   #######
-  Sys.sleep(0.1)
+  Sys.sleep(0.3)
   #add soil params to SELECTOR.IN
   write.hydraulic.para(project.path = project_path,
                        model = soil.model,
@@ -381,7 +381,7 @@ create.H1D.project <- function(project.name,
                        vals = soil.df)
 
   #######
-  Sys.sleep(0.1)
+  Sys.sleep(0.3)
   #add root water stress params to SELECTOR.IN
   write.rwu.stress(project.path = project_path,
                    model = root[["model"]],
@@ -391,7 +391,7 @@ create.H1D.project <- function(project.name,
                    r2H = root[["r2H"]], r2L = root[["r2L"]])
 
   ######
-  Sys.sleep(0.1)
+  Sys.sleep(0.3)
   #add simulation settings to SELECTOR.IN
   write.sim.settings(project.path = project_path,
                      MaxIt = sim[["MaxIt"]],

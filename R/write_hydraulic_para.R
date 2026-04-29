@@ -95,6 +95,7 @@ write.hydraulic.para<- function(project.path,
   #read in the SELECTOR file.
   # - needs to have been made already by create.h1d.project()
   # - this will be modified by both the 'vals' and 'para' paths in processing below.
+  Sys.sleep(0.5)
   input_data = readLines(con = file.path(project.path, "SELECTOR.IN"),
                          n = -1L,
                          encoding = "unknown")
@@ -201,8 +202,9 @@ write.hydraulic.para<- function(project.path,
                     input_data[rwu_block_ind : length(input_data)])
   }
 
+  Sys.sleep(0.3)
   #write to SELECTOR.IN file
   write(input_data, file =  file.path(project.path, "SELECTOR.IN"), append = F)
-
+  Sys.sleep(0.3)
 
 } #end fn
