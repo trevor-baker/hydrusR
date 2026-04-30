@@ -19,8 +19,6 @@ write.atmosph.in <- function(project.path,
                              atm.bc.data,
                              hCritS = 0, ...){
 
-  print("write.atmosph.in: this should check SELECTOR Block B for correct codes.")
-
   #load template
   out.file = "ATMOSPH.IN"
   # default.filename = "ATMOSPH.IN"

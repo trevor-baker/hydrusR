@@ -21,6 +21,7 @@
 #' @param MaxIt max iterations for solver. default = 100
 #' @param TolTh theta tolerance in solver. default = 0.001
 #' @param TolH head tolerance in solver. in project SpaceUnit. default = 1 cm.
+#' @param lScreen logical. length = 1. Should Hydrus outputs be shown on console?
 #' @param rwu logical, length = 1. root water uptake enbaled (TRUE) or disabled (FALSE)
 #' @param root_depth numeric, length = 1. in SpaceUnit. How deep is rooting in this profile? only used if rwu = TRUE.
 #' @param rBeta numeric, length 1. see ?write.root.dist for examples. 0 = same root density at all rooting depths. 0.962 = former default. values
@@ -82,6 +83,7 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
                          MaxIt = 100,
                          TolTh = 0.001,
                          TolH = 1,
+                         lScreen = FALSE,
                          rwu = TRUE,
                          root_depth = 100,
                          rBeta = 0,
@@ -99,7 +101,7 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
 
   if(head_init == 0){
     head_init <- -0.1
-    cat("head_init cannot be zero. set to -0.1\n") }
+    cat("head_init cannot be zero. It was changed to -0.1\n") }
   head_init <- -abs(head_init) #force to negative.
 
   project_path <- gsub("//", "/", gsub("\\\\", "/", project_path)) #ensure all are forward slashes
@@ -107,9 +109,10 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
   project_name <- gsub(parent_dir, "", project_path) #keep only project name
 
 
-  print.at <- unique( c( sort( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-4,0,1) })) ), #0.0001,0.0002,0.0005,0.001, etc.
-                         seq(10,1000,10),
-                         seq(1000,1e5,100),
+  print.at <- unique( c( sort( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-4,0,2) })) ), #0.0001,0.0002,0.0005,0.001, etc.
+                         seq(100,1000,5),
+                         seq(1000,10000,50),
+                         seq(10000,1e5,1000),
                          endTime) )
   if(any(print.at > endTime)){
     print.at <- print.at[which(print.at <= endTime)]   #make sure it ends on time.
@@ -200,7 +203,7 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
                                   DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
                                   print.at = print.at,
                                   print.step = NULL),
-                     sim = list(MaxIt = MaxIt, TolTh = TolTh, TolH = TolH,
+                     sim = list(MaxIt = MaxIt, TolTh = TolTh, TolH = TolH, lScreen = lScreen,
                                 TopInf = bc.args$TopInf, BotInf = bc.args$BotInf, WLayer = bc.args$WLayer,
                                 KodTop = bc.args$KodTop, KodBot = bc.args$KodBot,
                                 InitCond = FALSE, qGWLF = FALSE,
@@ -245,7 +248,7 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
             bot.bc.type = NULL,
             bot.bc.value = NULL)
 
-  call.H1D(project_path, hydrus.path = hydrus.path, show.output = TRUE)
+  call.H1D(project_path, hydrus.path = hydrus.path, show.output = lScreen)
 
   if(return.df){
     df.hyd <- read.nod_inf(project_path)

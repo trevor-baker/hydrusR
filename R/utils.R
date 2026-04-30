@@ -159,6 +159,38 @@ su <- function(x){ sort(unique(x)) }
 #' identical(length(x), len(x)) #TRUE
 len <- function(x){ length(x) }
 
+
+
+
+#####################
+#' Get unit multiples for converting cm and days into project units
+#'
+#' @return vector, length 3. L.multiple, T.multiple, LT.multiple. Multiply cm, d, or cm/d values by these to get L, T, or L/T in your project units.
+#' @param SpaceUnit
+#' @param TimeUnit
+#' @export
+unit_mult <- function(SpaceUnit = "cm", TimeUnit = "hours"){
+
+  if(!TimeUnit %in% c("seconds","minutes","hours","days")){
+    TimeUnit <- paste0(TimeUnit,"s") #days not day, etc.
+    #if it passes after adding the s then leave the function to run.
+    if(!TimeUnit %in% c("seconds","minutes","hours","days")){ stop("TimeUnit not valid.") }}
+  if(!SpaceUnit %in% c("mm","cm","m")){ stop("SpaceUnit not valid") }
+
+  #cm/d units converted to project units:
+  T.multiple <- c(24*60*60, 24*60, 24, 1)[which(c("seconds","minutes","hours","days") == TimeUnit)]
+  L.multiple <- c(10, 1, 0.01)[which(c("mm","cm","m") == SpaceUnit)]
+  LT.multiple <- L.multiple / T.multiple
+
+  out.vec <- c(L.multiple, T.multiple, LT.multiple)
+  names(out.vec) <- c("L.multiple", "T.multiple", "LT.multiple")
+  return(out.vec)
+
+} #end fn
+
+
+
+##################
 #' Pipe operator
 #'
 #' move object from left-hand side into first argument of right-hand side function

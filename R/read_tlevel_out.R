@@ -32,7 +32,7 @@ read.tlevel.out<- function(project.path, out.file = "T_Level.out", output = NULL
     #                        fileEncoding = "", encoding = "unknown")
 
     options(warn = -1)
- tlevel_out = data.table::fread(input = file.path(project.path, out.file),
+ tlevel_out = data.table::fread(file = file.path(project.path, out.file),
                   fill = TRUE, blank.lines.skip = T,  skip = 6, header = T)
 
  tlevel_out =  apply(tlevel_out, MARGIN = 2, FUN = as.numeric)

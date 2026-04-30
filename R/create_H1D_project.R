@@ -84,7 +84,7 @@ create.H1D.project <- function(project.name,
                                             dt = 1e-3, dtMin = 1e-6, dtMax = 1,
                                             DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7,
                                             print.step = 10, print.at = NULL),
-                               sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1,
+                               sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1, lScreen = FALSE,
                                           TopInf = TRUE, BotInf = FALSE, WLayer = TRUE,
                                           KodTop = -1, KodBot = -1, InitCond = FALSE,
                                           qGWLF = FALSE, FreeD = TRUE, SeepF = FALSE,
@@ -113,7 +113,7 @@ create.H1D.project <- function(project.name,
   #   times = c("time.range1", "time.range2", "dt", "dtMin", "dtMax",
   #             "DMul1", "DMul2", "ItRange1", "ItRange2", "print.step"),
   #   #simulation settings
-  #   sim = c("MaxIt", "TolTh", "TolH", "TopInf", "BotInf", "WLayer",
+  #   sim = c("MaxIt", "TolTh", "TolH", "TopInf", "BotInf", "WLayer", "lScreen",
   #            "KodTop", "KodBot", "InitCond", "qGWLF", "FreeD", "SeepF", "DrainF", "hSeep"),
   #   #root stress settings
   #   root = c("model", "comp", "P0", "P2H", "P2L", "P3", "POptm", "r2H", "r2L"),
@@ -152,7 +152,10 @@ create.H1D.project <- function(project.name,
         stop("HYDRUS1D project not created")
       }
     } else { #else arg says to overwrite without asking
-      cat("project_path automatically overwritten due to 'overwrite' argument.\n")
+      if(sim[["lScreen"]]){
+        cat("project_path automatically overwritten due to 'overwrite' argument.\n")
+      }
+
       unlink(project_path, recursive = TRUE, force = TRUE)
       dir.create(project_path, showWarnings = F)
     }
@@ -172,9 +175,6 @@ create.H1D.project <- function(project.name,
   # as.list( formals(hydrusR::create.H1D.project) ) #this tells the values of the simple arguments (not the vectors and lists)
   # lapply(as.list( formals(hydrusR::create.H1D.project) ), names) #this tells the names within the vector and list args (need to drop leading "")
   # lapply(as.list( formals(hydrusR::create.H1D.project) ), as.list) #this gives the values of the vector and list args, but is not useful for the simple args.
-
-  print("create.H1D: PrintTimes can't be trusted. needs to be set better coming in, or better yet calculated here.")
-
 
 
   #calculate PrintTimes for inserting below
@@ -321,6 +321,23 @@ create.H1D.project <- function(project.name,
   nmat_vals_fmt <- paste(sprintf(fmt_nmat, nmat_vals), collapse = "")
   selector_data[nmat_lines] <- nmat_vals_fmt
 
+  #update lScreen - whether Hydrus should print to console
+  lsc_ind <- grep("lScreen", selector_data)
+  lsc_lines = lsc_ind + 1
+  lsc_vals <- selector_data[lsc_lines]
+  lsc_vals <- strsplit(lsc_vals, " ")
+  lsc_vals <- lsc_vals[which(lsc_vals != "")]
+  lsc_names <- selector_data[lsc_lines-1]
+  lsc_names <- strsplit(lsc_names, " ")
+  lsc_names <- lsc_names[which(lsc_names != "")]
+  lsc_col <- which(lsc_names == "lScreen")
+  lsc_vals[lsc_col] <- args_vec["lScreen"]
+
+  lsc_vals <- sapply(list(nmat, soil.sub, slp), as.character)
+  fmt_nmat <- c("%3s", "%8s", "%8s")
+  nmat_vals_fmt <- paste(sprintf(fmt_nmat, nmat_vals), collapse = "")
+  selector_data[nmat_lines] <- nmat_vals_fmt
+
   #write updates to SELECTOR.IN
   write(selector_data, file = file.path(project_path, basename(selector_in)), append = F)
 
@@ -402,8 +419,10 @@ create.H1D.project <- function(project.name,
                      FreeD = sim[["FreeD"]], SeepF = sim[["SeepF"]],
                      DrainF = sim[["DrainF"]], hSeep = sim[["hSeep"]])
 
+  if(sim[["lScreen"]]){
+    cat("New HYDRUS-1D project created in", project_path, "...\n")
+  }
 
-  cat("New HYDRUS-1D project created in", project_path, "...\n")
 
 } #end fn
 

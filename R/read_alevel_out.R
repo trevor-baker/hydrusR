@@ -27,7 +27,7 @@ read.alevel.out<- function(project.path, out.file = "A_Level.out", output = NULL
 
   options(warn = -1)
 
-  alevel_out = data.table::fread(input = file.path(project.path, out.file),
+  alevel_out = data.table::fread(file = file.path(project.path, out.file),
                                  fill = TRUE, blank.lines.skip = T,
                                  skip = 2, header = T)
 

@@ -8,6 +8,8 @@ write.mater.in(
   project.path,
   df.val,
   df.texture = data.frame(sand = 70, silt = 20, clay = 5),
+  TimeUnit = parent.frame()$TimeUnit,
+  SpaceUnit = parent.frame()$SpaceUnit,
   ...
 )
 }
@@ -15,10 +17,14 @@ write.mater.in(
 \item{project.path}{the path to your Hydrus project.}
 
 \item{df.val}{dataframe with theta, h, and K columns, and an 'id' column if more than one material is represented. all data must be in project
-length and time units.}
+length and time units. h should span at least from -1e-2 cm to -1e-5 cm.}
 
 \item{df.texture}{dataframe with sand, silt, clay, and (optional) Db columns, in that order. 3 or 4 column, any number of rows. These will be run
-through version 3 of ROSETTA to get van Genuchten-Mualem parameters to generate theta-h-K tables.}
+through version 3 of ROSETTA to get van Genuchten-Mualem parameters to generate theta-h-K tables. ignored if df.val given.}
+
+\item{TimeUnit}{your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr}
+
+\item{SpaceUnit}{your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".}
 }
 \value{
 nothing returned to console. MATER.IN file is written to project.path

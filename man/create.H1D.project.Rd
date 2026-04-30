@@ -45,11 +45,12 @@ assumed to be FALSE. These are assigned to the Main section of HYDRUS1D.DAT.}
 
 \item{units}{named vector giving units for this project, length = 2 (TimeUnit, SpaceUnit), each is a character string.  These are assigned to the
 Main section of HYDRUS1D.DAT. \cr
-TimeUnit: simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
-SpaceUnit: vertical spatial unit (default = "cm"). permitted: "mm", "cm", "m".}
+TimeUnit: your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
+SpaceUnit: your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".}
 
 \item{profile}{information about the soil profile. Named vector "SubregionNumbers", value is integer length = 1, telling how many subregions for
-mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT.}
+mass balances are included in this simulation. These are assigned to the Main section of HYDRUS1D.DAT. This formerly held a value "MaterialNUmbers" but
+it is now calculated from the soil information given in soil.df or soil.para.}
 
 \item{solutes}{Named vector. Not currently set up for solute simulations. This argument can be omitted and defaults will be set without soute modelling.
 vector names: "NumberOfSolutes", "MobileImmobile", "SolutionConc", "AdsorbedConc", "PrecipConc".  These are assigned to the Main section of HYDRUS1D.DAT.}
@@ -75,9 +76,14 @@ DrainF, hSeep. See ?hydrusR::write.sim.settings for details.}
 \item{root}{Root water uptake stress parameters. Named list: model, comp, P0, P2H, P2L, P3, POptm, r2H, r2L. See ?hydrusR::write.rwu.stress for
 details.}
 
-\item{soil.para}{List of soil hydraulic parameters, one entry per material to be included in simulation. See ?hydrusR::write.hydraulic.para for details.}
+\item{soil.para}{List of soil hydraulic parameters, one entry per material to be included in simulation. if 'soil.df' is given, this is ignored. See ?hydrusR::write.hydraulic.para for details.}
 
-\item{soil.model}{integer, 0-7. identifies the soil model to be used. 0 = standard van Genuchten-Mualem. See ?hydrusR::write.hydraulic.para for details.}
+\item{soil.df}{dataframe of theta-h-K values. four columns: 'theta', 'h' 'K' and 'id'. 'id' is an integer from 1:(count of soil materials). h
+should span at least from -1e-2 to -1e5 cm. All of these values must be in project units, which by default are cm and hours, but note that ROSETTA
+outputs and IEGsoil functions work in cm/day and require conversion prior to being assigned as 'soil.df'.}
+
+\item{soil.model}{integer, 0-7 or 10. identifies the soil model to be used. 0 = standard van Genuchten-Mualem. 10 = from lookup tables (soil.df).
+Other options not currently enabled. See ?hydrusR::write.hydraulic.para for details.}
 
 \item{soil.hys}{include hysteresis in simulation? integer. 0 = No, 1 = Yes.}
 

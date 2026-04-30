@@ -215,7 +215,7 @@ create.soil.profile <- function(project.path,
 
   #add observation node info, if there are any
   if(!is.null(obs.nodes)) write.obs.nodes(project.path, obs.nodes)
-  print("PROFILE: what are obs.nodes?")
+
 
   # ##this is now done in create.H1D.project with all other HYDRUS1D.DAT edits.
   # #add Subregion count to HYDRUS1D.DAT file

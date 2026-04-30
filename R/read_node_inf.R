@@ -27,7 +27,7 @@ read.nod_inf<- function(project.path,
 
   #check where first node row is - where to start the file reading, because single porosity models are different than
   # dual permeability (less rows in file header)
-  node.read <- data.table::fread(input = file.path(project.path,
+  node.read <- data.table::fread(file = file.path(project.path,
                                                    out.file),
                                  fill = TRUE,
                                  blank.lines.skip = FALSE,
@@ -57,7 +57,7 @@ read.nod_inf<- function(project.path,
   #this is used to read in files with the correct skip argument. because of blank column names, I need to use the above process.
   # read in the data, which is separated into tables, one for each time. these tables get combined in the subsequent steps to make a
   # proper dataset.
-  nod_inf0 = data.table::fread(input = file.path(project.path,
+  nod_inf0 = data.table::fread(file = file.path(project.path,
                                                  out.file),
                                fill = TRUE,
                                header = TRUE,

@@ -27,12 +27,6 @@ write.time.settings <- function(project.path,
                                 print.step = NULL,
                                 print.at = NULL){
 
-  print("write.time.settings: better to add print.times arg for better print spacing. see notes")
-  #print.step either forces too many closely spaced prints as soil dries, or has too much time between prints when soil is wet
-  # if there was an arg print.times that gave exact times to print at, it would be better. this has implications for
-  # write.print.times though, which is why it wasn't a quick change. write.print.times needs to be able to sensibly space
-  # print times later in the simulation, for which print.step is useful. a solution where the first iteration uses
-  # print.times (e.g. 0.001,0.01,0.1,1,10,20,30,...) and later ones just use a regular step would be good.
 
   ########
   # check/fix args

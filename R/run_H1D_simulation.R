@@ -123,8 +123,8 @@ run.H1D.simulation = function(project.path,
       sapply(sim1_files, file.copy, to = sim1_folder)
 
       options(warn = -1)
-      h1d_output =  data.table::fread(input = file.path(project.path, "Nod_Inf.out"),
-                                     fill = TRUE, blank.lines.skip = FALSE, skip = 10)
+      h1d_output =  data.table::fread(file = file.path(project.path, "Nod_Inf.out"),
+                                      fill = TRUE, blank.lines.skip = FALSE, skip = 10)
 
       time_ind = grep("Time:", h1d_output[["Node"]]) #which rows ar eheaders for a new timestep?
       to_skip = time_ind[length(time_ind)]+2 #skip to the final timestep
@@ -194,7 +194,7 @@ run.H1D.simulation = function(project.path,
 
            #################
            options(warn = -1) #silence warnings for fread
-           h1d_output =    data.table::fread(input = file.path(project.path, "Nod_Inf.out"),
+           h1d_output =    data.table::fread(file = file.path(project.path, "Nod_Inf.out"),
                                              fill = TRUE, blank.lines.skip = FALSE, skip = 10)
 
            time_ind = grep("Time:", h1d_output[["Node"]])
