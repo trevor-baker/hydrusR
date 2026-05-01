@@ -109,11 +109,12 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
   project_name <- gsub(parent_dir, "", project_path) #keep only project name
 
 
-  print.at <- unique( c( sort( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-4,0,2) })) ), #0.0001,0.0002,0.0005,0.001, etc.
+  print.at <- unique( c( as.vector(sapply(c(1,2,5), function(x){ x*10^seq(-4,2,1) })), #0.0001,0.0002,0.0005,0.001,..., to 500
                          seq(100,1000,5),
                          seq(1000,10000,50),
                          seq(10000,1e5,1000),
                          endTime) )
+  print.at <- sort(print.at)
   if(any(print.at > endTime)){
     print.at <- print.at[which(print.at <= endTime)]   #make sure it ends on time.
   }#end if
