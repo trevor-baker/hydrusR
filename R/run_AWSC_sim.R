@@ -5,6 +5,8 @@
 #' @param
 #' @param project_path path to your project
 #' @param hydrus.path path to Hydrus exe files, e.g. "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx",
+#' @param desc text string, length = 1. Strongly recommended to provide information allowing origin file to be traced and results to be interpreted.
+#' At minimum, this should be the file path to your current script.
 #' @param TimeUnit your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
 #' @param SpaceUnit: your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".
 #' @param df.val dataframe with theta, h, K, id columns. example here: read.csv( system.file("examples/df_val.csv", package = "hydrusR") ).
@@ -70,6 +72,7 @@
 
 run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_lookup",
                          hydrus.path = "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx",
+                         desc = parent.frame()$desc,
                          SpaceUnit = "cm",
                          TimeUnit = "hours",
                          df.val,
@@ -173,7 +176,6 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
     if(const_botbc){
       #constants are (1), flux is -1 and head is +1
       if(bot_bc_type == "flux"){ -1 } else { +1 }} else {
-        #constants are (3), flux is -3 and head is +3
         if(bot_bc_type == "flux"){ -3 } else { +3 }
       }
   }
@@ -190,7 +192,7 @@ run.AWSC.sim <- function(project_path = "C:/Users/t/Documents/temp/example_looku
 
   create.H1D.project(project.name = project_name,
                      parent.dir = parent_dir,
-                     description = paste("TDB MSc:", project_name),
+                     description = desc,
                      overwrite = T,
                      processes = c(WaterFlow = TRUE, RootWaterUptake = rwu),
                      units = c(TimeUnit = TimeUnit, SpaceUnit = SpaceUnit),

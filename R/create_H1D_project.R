@@ -165,6 +165,8 @@ create.H1D.project <- function(project.name,
   }
 
 
+
+
   print("create.H1D.project: improvements needed so that not all arguments need to be explicit in the function call")
   #as written, for an argument to be passed properly, it needs to be an explicit part of the call. if not in the call, its default value
   #   is not transferred onwards. this could be accomplished using formals() to get the defaults, check which are in the call, and combine to
@@ -219,7 +221,10 @@ create.H1D.project <- function(project.name,
   if(length(sim.args)>0){
     args_vec0 <- args_vec0[-sim.args]
   }
-
+  desc.args <- which(grepl("^descrip",names(args_vec0)))
+  if(length(desc.args)>0){
+    args_vec0 <- args_vec0[-desc.args]
+  }
 
   args_list <- args_vec0[-1] #drop function name. args start at index 2
   args_eval <- NULL
@@ -291,10 +296,25 @@ create.H1D.project <- function(project.name,
 
   ######################
   #write DESCRIPT.TXT file
-  description = ifelse(is.null(description), #give description if there was none given
-                       paste("project title:", project.name),
-                       description)
-  descript_vec = c("Pcp_File_Version=1", description)
+  if(is.null(description)){
+
+    #at least know who ran it   #all the excessive slashes are just to always force to uppermost directory
+    user.dir <- dir("../../../../../../../../../../../../../../../../../../../../../Users")
+    if(length(user.dir)>0){
+
+      #drop defaults, get down to just real users
+      drop.vals <- unlist( grapl(c("admin", "users", "default", "public", "desktop.ini"), casefold(user.dir) ) )
+      users <- user.dir[-drop.vals]
+      description <- paste("Users: ", paste(users, collapse = ", "))
+    } else {
+      description <- "No description provided."
+    } #end else
+  }#end if
+
+  descript_vec = c("Pcp_File_Version=1",
+                   parent.dir,
+                   paste("project name:", project.name), #always give project name and parent.dir
+                   description)
   write(descript_vec, file = descript_file, append = FALSE)
 
 

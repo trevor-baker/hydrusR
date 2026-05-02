@@ -202,3 +202,18 @@ unit_mult <- function(SpaceUnit = "cm", TimeUnit = "hours"){
 #' @usage lhs \%>\% rhs
 NULL
 
+
+
+#' sapply wrapper for which(grepl())
+#'
+#' allows vector to be given to grepl(pattern) rather than single values. function called just like grepl() would be.
+#' @returns returns a vector if one match in x for each y. returns a list if there are less than or more than one match for any y.
+#' @param pattern vector of values to be searched for. same as grepl's 'pattern' argument but allows vector.
+#' @param x the value (e.g., character string) being searched. same as grepl's 'x' argument.
+#' @examples
+#' which(grepl(c("a", "b", "z"), "abcdefghij")) #will not work. ignores b and z
+#' c(which(grepl("a", "abcdefghij")),  which(grepl("b", "abcdefghij")), which(grepl("z", "abcdefghij"))) #doesn't work because the non-match position isn't given
+#' sapply(c("a", "b", "z"), function(y){ which(grepl(y, "abcdefghij")) }) #works and is exactly what grapl function does.
+#' grapl(c("a", "b", "z"), "abcdefghij") #returns list because z has no match
+#' grapl(c("a", "b"), "abcdefghij") #returns vector because both have one match
+grapl <- function(pattern,x){ sapply(pattern, function(z){ which(grepl(z,x)) })}
