@@ -12,8 +12,6 @@ write.ini.cond(project.path, pr.vec = NULL, wt.depth = NULL, ...)
 \item{pr.vec}{A vector of pressure head values (length = # of total nodes in the profile). Same length units as overall project.}
 
 \item{wt.depth}{Depth of water table (to assign hydrostatic initial condition). In same length units as overall project.}
-
-\item{...}{}
 }
 \description{
 This function will allow the user to give either a vector of pressure head values or a water table depth to a soil profile. If both are given,

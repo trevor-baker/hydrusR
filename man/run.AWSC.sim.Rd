@@ -7,6 +7,7 @@
 run.AWSC.sim(
   project_path = "C:/Users/t/Documents/temp/example_lookup",
   hydrus.path = "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx",
+  desc = parent.frame()$desc,
   SpaceUnit = "cm",
   TimeUnit = "hours",
   df.val,
@@ -20,6 +21,7 @@ run.AWSC.sim(
   MaxIt = 100,
   TolTh = 0.001,
   TolH = 1,
+  lScreen = FALSE,
   rwu = TRUE,
   root_depth = 100,
   rBeta = 0,
@@ -37,6 +39,9 @@ run.AWSC.sim(
 \item{project_path}{path to your project}
 
 \item{hydrus.path}{path to Hydrus exe files, e.g. "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx",}
+
+\item{desc}{text string, length = 1. Strongly recommended to provide information allowing origin file to be traced and results to be interpreted.
+At minimum, this should be the file path to your current script.}
 
 \item{TimeUnit}{your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr}
 
@@ -64,6 +69,8 @@ material, then enter 1 or leave NULL and 1 will be filled for all rows.}
 \item{TolTh}{theta tolerance in solver. default = 0.001}
 
 \item{TolH}{head tolerance in solver. in project SpaceUnit. default = 1 cm.}
+
+\item{lScreen}{logical. length = 1. Should Hydrus outputs be shown on console?}
 
 \item{rwu}{logical, length = 1. root water uptake enbaled (TRUE) or disabled (FALSE)}
 

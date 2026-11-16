@@ -18,9 +18,9 @@ create.H1D.project(
   times = list(time.range1 = 0, time.range2 = 2400, dt = 0.001, dtMin = 1e-06, dtMax = 1,
     DMul1 = 0.7, DMul2 = 1.3, ItRange1 = 3, ItRange2 = 7, print.step = 10, print.at =
     NULL),
-  sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1, TopInf = TRUE, BotInf = FALSE, WLayer
-    = TRUE, KodTop = -1, KodBot = -1, InitCond = FALSE, qGWLF = FALSE, FreeD = TRUE,
-    SeepF = FALSE, DrainF = FALSE, hSeep = 0),
+  sim = list(MaxIt = 100, TolTh = 0.001, TolH = 1, lScreen = FALSE, TopInf = TRUE, BotInf
+    = FALSE, WLayer = TRUE, KodTop = -1, KodBot = -1, InitCond = FALSE, qGWLF = FALSE,
+    FreeD = TRUE, SeepF = FALSE, DrainF = FALSE, hSeep = 0),
   root = list(model = 0, comp = 1, P0 = -10, P2H = -200, P2L = -800, P3 = -8000, POptm =
     -25, r2H = 0.5, r2L = 0.1),
   soil.para = list(list(thr = 0.05, ths = 0.4, alpha = 0.3, n = 1.3, Ks = 5, l = 0.5)),

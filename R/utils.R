@@ -54,7 +54,9 @@ get.decimalplaces <- function(x) {
   if(is.numeric(x)){
     if(is.na(x)){ return(NA_integer_) }
     if ((x %% 1) != 0) {
-      dec.val <- nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
+      #dec.val <- nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]]) #old code. rejected very small values e.g. 1e-05
+      dec.val <- nchar(strsplit(sub('0+$', '', format(x, scientific = FALSE, digits = 15, trim = TRUE)),
+                                ".", fixed = TRUE)[[1]][[2]])
       return(dec.val)
     } else {
       return(0)

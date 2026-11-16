@@ -4,13 +4,7 @@
 \alias{read.obs_node}
 \title{Read observation point outputs}
 \usage{
-read.obs_node(
-  project.path,
-  out.file = "Obs_Node.out",
-  obs.output = NULL,
-  obs.nodes,
-  ...
-)
+read.obs_node(project.path, out.file = "Obs_Node.out", obs.output = NULL, ...)
 }
 \arguments{
 \item{project.path}{Directory of the model input/outputs}
@@ -19,9 +13,12 @@ read.obs_node(
 
 \item{obs.output}{The output to be returned.Default = NULL, i.e., all the outputs are read
 Other options are "h", "theta", "Flux". example, obs.output = c("h", "theta")}
-
-\item{obs.nodes}{Numeric Vector of the observation nodes defined in the PROFILE.DAT}
 }
 \description{
 Read observation point outputs
+}
+\examples{
+parent.dir <- "C:/Users/t/IEG Dropbox/Trevor Baker/Integral Ecology/calculation tools/awsc/r scripts/ieg awsc/under development/vG PTF/Hydrus/"
+project.path <- paste0(parent.dir,"plotA")
+oo <- read.obs_node(project.path)
 }
