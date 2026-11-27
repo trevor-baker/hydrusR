@@ -6,6 +6,17 @@
 \usage{
 get.water.table(tlevel.out, profile.depth)
 }
+\arguments{
+\item{tlevel.out}{Path to the T_Level.out file.}
+
+\item{profile.depth}{Total depth of the soil profile (same length units as the project).}
+}
+\value{
+Data frame with `Time` and `wtdepth` (water table depth).
+}
 \description{
 Extracts water table depth at each time step
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

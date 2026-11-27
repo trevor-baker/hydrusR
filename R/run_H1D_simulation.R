@@ -4,8 +4,8 @@
 #' will not run simulations with > 960 timesteps, and this function holds a loop structure for running longer simulations wherein the outputs of one
 #' run are fed into input files for the next run, and all outputs are bound together at the end. For a short simulation (< 960 timesteps), call.H1D()
 #' could be called directly, but always running Hydrus via run.H1D.simulation keeps workflow standardized. \cr
-#' #' Note: this function can only be used while running R as an administrator, which can be done by opening RStudio via the right-click menu.#'
-#' @param project.path
+#' Note: this function can only be used while running R as an administrator, which can be done by opening RStudio via the right-click menu.
+#' @param project.path Path to the Hydrus-1D project folder.
 #' @param hydrus.path The folder where the Hydrus executable is stored. e.g., "C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx"
 #' @param profile.depth Numeric, length = 1. Total profile depth, in project length units.
 #' @param root.depth Numeric, length = 1. rooting depth, in project length units.
@@ -15,12 +15,12 @@
 #' @param bot.bc.type Character, length = 1. bottom boundary condition type. "head" or "flux"
 #' @param bot.bc.value  Numeric, length = 1. value of the bottom boundary condition. Only needed if 'const.bot.bc' = TRUE.
 #' @param const.bot.bc Logical, length = 1. to set if bottom boundary condition is constant. If FALSE, then it is a variable boundary condition and data needs to be supplied in 'atm.bc.data' in either the rB (flux) or hB (head) columns, depending on 'bot.bc.type'
-#' @param soil.para
 #' @param atm.bc.data data frame containing atmonspheric boundary conditions (time variable BC)
-#' @param ini.wt
 #' @param TimeUnit character, length = 1. simulation time unit information (default = "days"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
-#' @param obs.nodes
 #' @param show.output Logical, whether the shell output of HYDRUS1D run should be displayed on R console, default = F
+#' @param timesteps Numeric vector of time steps. If given, deltaT is ignored.
+#' @param ... Currently unused.
+#' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 #' @import data.table
 #' @export
 

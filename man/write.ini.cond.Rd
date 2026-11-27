@@ -12,6 +12,11 @@ write.ini.cond(project.path, pr.vec = NULL, wt.depth = NULL, ...)
 \item{pr.vec}{A vector of pressure head values (length = # of total nodes in the profile). Same length units as overall project.}
 
 \item{wt.depth}{Depth of water table (to assign hydrostatic initial condition). In same length units as overall project.}
+
+\item{...}{Currently unused.}
+}
+\value{
+Called for its side effect of writing initial pressure heads to PROFILE.DAT. Returns NULL invisibly.
 }
 \description{
 This function will allow the user to give either a vector of pressure head values or a water table depth to a soil profile. If both are given,
@@ -20,4 +25,7 @@ and by run.H1D.simulation() when looping through long timeframes to transfer val
 Note that the Head argument of create.soil.profile makes the pr.vec part of this function redundant for setting up a simulation. For setting up,
 it will be easier for traceback to enter this data via create.soil.profile. If a water table is desired for initial conditions, then this function
 can be used.
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

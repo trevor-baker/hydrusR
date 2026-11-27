@@ -40,7 +40,15 @@ head values ranging from near-saturation (e.g., -1e-3) to at least -1e5 cm. Cann
 \item{TimeUnit}{your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr}
 
 \item{SpaceUnit}{your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".}
+
+\item{...}{Currently unused.}
+}
+\value{
+Called for its side effect of writing hydraulic parameters to SELECTOR.IN. Returns NULL invisibly.
 }
 \description{
 Write soil hydraulic parameters to selector.in
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

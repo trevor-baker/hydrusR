@@ -1,7 +1,9 @@
 #' Extracts water table depth at each time step
 #'
-#' @param tlevel.out
-#' @param profile.depth
+#' @param tlevel.out Path to the T_Level.out file.
+#' @param profile.depth Total depth of the soil profile (same length units as the project).
+#' @return Data frame with `Time` and `wtdepth` (water table depth).
+#' @author Subodh Acharya <https://github.com/shoebodh>
 #' @export
 
 get.water.table<- function(tlevel.out, profile.depth) {

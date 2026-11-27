@@ -1,10 +1,11 @@
 #' Calculate RMSE and Nash-Sutcliffe CEFF of the simulation
 #'
-#' @param data
-#' @param var.name
-#' @param print.stats
-#' @param plot
-#' @param ...
+#' @param data Data frame with columns `obs` (observed) and `pred` (predicted).
+#' @param var.name Variable name used in plot axis labels.
+#' @param print.stats Logical; if TRUE, return RMSE and CEFF.
+#' @param plot Logical; if TRUE, draw observed vs predicted plot with a 1:1 line.
+#' @param ... Currently unused.
+#' @author Subodh Acharya <https://github.com/shoebodh>
 #' @export
 
 model.eval<- function(data, var.name = "",  print.stats = TRUE, plot = FALSE, ...){
@@ -18,7 +19,7 @@ model.eval<- function(data, var.name = "",  print.stats = TRUE, plot = FALSE, ..
             NA), cex = 1, pch = c(NA, NA), lty = c(1, NA), lwd = 2)
    }
       if(print.stats == TRUE) {
-            RMSE <- sqrt(mean(data$obs - data$pred)^2)
+            RMSE <- sqrt(mean((data$obs - data$pred)^2))
             CEFF <- 1 - sum((data$obs - data$pred)^2)/sum((data$obs - mean(data$obs))^2)
 
 

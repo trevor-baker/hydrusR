@@ -1,10 +1,12 @@
 #' READ outputs of TLEVEL.OUT
 #'
-#' @param project.path
-#' @param out.file
-#' @param output
-#' @param warn
-#' @param ...
+#' @param project.path Directory of the model input/outputs.
+#' @param out.file Name of the T_Level.out file, in case saved to a different name.
+#' @param output Vector of output column names. Defaults to all T_Level columns; currently not used to subset the results.
+#' @param warn Currently unused.
+#' @param ... Currently unused.
+#' @return Data frame of T_Level.out results, with sum(*) columns made cumulative across runs.
+#' @author Subodh Acharya <https://github.com/shoebodh>
 #' @export
 
 read.tlevel.out<- function(project.path, out.file = "T_Level.out", output = NULL,

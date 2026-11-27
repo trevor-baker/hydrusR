@@ -12,6 +12,23 @@ read.tlevel.out(
   ...
 )
 }
+\arguments{
+\item{project.path}{Directory of the model input/outputs.}
+
+\item{out.file}{Name of the T_Level.out file, in case saved to a different name.}
+
+\item{output}{Vector of output column names. Defaults to all T_Level columns; currently not used to subset the results.}
+
+\item{warn}{Currently unused.}
+
+\item{...}{Currently unused.}
+}
+\value{
+Data frame of T_Level.out results, with sum(*) columns made cumulative across runs.
+}
 \description{
 READ outputs of TLEVEL.OUT
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

@@ -4,7 +4,8 @@
 #' @param out.file name of teh alevel file: "A_Level.out" is default output file.
 #' @param output vector of output names that should be read
 #' @param warn Logical for displaying/suppressing warnings producted by data.table::fread()
-#' @param ...
+#' @param ... Currently unused.
+#' @author Subodh Acharya <https://github.com/shoebodh>
 #' @export
 
 read.alevel.out<- function(project.path, out.file = "A_Level.out", output = NULL, warn = FALSE, ...) {
@@ -46,6 +47,8 @@ read.alevel.out<- function(project.path, out.file = "A_Level.out", output = NULL
     alevel_out = alevel_out
 
   }else {
+
+    stop("code currently does not support > 1 run. needs edits")
 
     for(i in 2: length(astart_ind)){
 

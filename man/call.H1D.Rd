@@ -4,7 +4,13 @@
 \alias{call.H1D}
 \title{Executes H1D_CALC.EXE from  Hydrus 1D directory}
 \usage{
-call.H1D(project.path, hydrus.path = NULL, show.output = TRUE, ...)
+call.H1D(
+  project.path,
+  hydrus.path = NULL,
+  show.output = TRUE,
+  timeout = NULL,
+  ...
+)
 }
 \arguments{
 \item{project.path}{Path of the hydrus project}
@@ -13,6 +19,9 @@ call.H1D(project.path, hydrus.path = NULL, show.output = TRUE, ...)
 
 \item{show.output}{Logical (Default = TRUE) whether the shell
 output should be visible on R console (relevant only on windows)}
+
+\item{timeout}{Maximum run time in seconds (Default = NULL, no limit). On
+timeout (windows) the process is killed and a warning is issued.}
 }
 \description{
 Executes H1D_CALC.EXE from  Hydrus 1D directory

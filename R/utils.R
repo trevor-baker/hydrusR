@@ -4,7 +4,7 @@
 #' @param dest.dir Destination directory
 #' @param overwrite Logical, if true overwrites the existing directory, default = T
 #' @param ask Logical, should ask whether to create/delete directories if required, default = FALSE
-#' @param ...
+#' @param ... Currently unused.
 #' @export
 
 dir.copy<- function(src.dir, dest.dir, overwrite = TRUE, ask = FALSE, ...){
@@ -47,7 +47,7 @@ dir.copy<- function(src.dir, dest.dir, overwrite = TRUE, ask = FALSE, ...){
 #' @param x A double numerical
 #' @export
 #' @return integer, the number of dec places
-#' @example
+#' @examples
 #' get.decimalplaces(10.343434)
 
 get.decimalplaces <- function(x) {
@@ -72,10 +72,10 @@ get.decimalplaces <- function(x) {
 #' @param x  A numeric vector to be formatted
 #' @param ndec Number of decimal places to apply (e.g, .000xx)
 #' @param power.digits Number of power digits to apply (e.g., e+002)
-#' @param ...
+#' @param ... Currently unused.
 #' @return a character string of a value formatted to scientific notation
 #' @export
-#' @example
+#' @examples
 #' format2sci(120.5, ndec = 5, power.digits = 2)
 
 format2sci<- function (x, ndec, power.digits, ...) {
@@ -168,8 +168,8 @@ len <- function(x){ length(x) }
 #' Get unit multiples for converting cm and days into project units
 #'
 #' @return vector, length 3. L.multiple, T.multiple, LT.multiple. Multiply cm, d, or cm/d values by these to get L, T, or L/T in your project units.
-#' @param SpaceUnit
-#' @param TimeUnit
+#' @param SpaceUnit Length unit of the project. One of "mm", "cm", "m". Default "cm".
+#' @param TimeUnit Time unit of the project. One of "seconds", "minutes", "hours", "days", "years". Default "hours".
 #' @export
 unit_mult <- function(SpaceUnit = "cm", TimeUnit = "hours"){
 

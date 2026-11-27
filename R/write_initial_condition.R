@@ -9,12 +9,12 @@
 #' @param project.path Path of HYDRUS1D project. Must contain a PROFILE.DAT file already. e.g., from create.soil.profile()
 #' @param pr.vec A vector of pressure head values (length = # of total nodes in the profile). Same length units as overall project.
 #' @param wt.depth Depth of water table (to assign hydrostatic initial condition). In same length units as overall project.
-#' @param ...
+#' @param ... Currently unused.
 #'
-#' @return
+#' @return Called for its side effect of writing initial pressure heads to PROFILE.DAT. Returns NULL invisibly.
+#' @author Subodh Acharya <https://github.com/shoebodh>
 #' @export
 #'
-#' @examples
 
 write.ini.cond<- function(project.path,
                           pr.vec = NULL,

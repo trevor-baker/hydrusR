@@ -1,3 +1,14 @@
+#' Plot pressure head profiles
+#'
+#' Reads Nod_Inf.out from a Hydrus-1D project and plots pressure head against depth for every 20th output time.
+#' Not a true S3 method; the name only resembles one.
+#' @param project.path Directory of the Hydrus-1D project.
+#' @param output Name of the Nod_Inf.out column to plot. Default "Head".
+#' @param ... Currently unused.
+#' @return Called for its side effect of drawing a plot. Returns NULL invisibly.
+#' @author Subodh Acharya <https://github.com/shoebodh>
+#' @rawNamespace export(plot.pressure.profile)
+#' @exportS3Method NULL
 plot.pressure.profile = function(project.path, output = "Head", ...){
 
       h1d_output = read.nod_inf(project.path, out.file = "Nod_Inf.out", output = output)
@@ -28,6 +39,17 @@ abline(v = 0, lwd = 2, col = "grey40")
 }
 
 ##
+#' Plot moisture profiles
+#'
+#' Reads Nod_Inf.out from a Hydrus-1D project and plots volumetric water content against depth for every 20th output time.
+#' Not a true S3 method; the name only resembles one.
+#' @param project.path Directory of the Hydrus-1D project.
+#' @param output Name of the Nod_Inf.out column to plot. Default "Moisture".
+#' @param ... Currently unused.
+#' @return Called for its side effect of drawing a plot. Returns NULL invisibly.
+#' @author Subodh Acharya <https://github.com/shoebodh>
+#' @rawNamespace export(plot.moisture.profile)
+#' @exportS3Method NULL
 plot.moisture.profile = function(project.path, output = "Moisture", ...){
 
       h1d_output = read.nod_inf(project.path, out.file = "Nod_Inf.out", output = output)

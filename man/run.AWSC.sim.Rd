@@ -43,6 +43,8 @@ run.AWSC.sim(
 \item{desc}{text string, length = 1. Strongly recommended to provide information allowing origin file to be traced and results to be interpreted.
 At minimum, this should be the file path to your current script.}
 
+\item{SpaceUnit}{your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".}
+
 \item{TimeUnit}{your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr}
 
 \item{df.val}{dataframe with theta, h, K, id columns. example here: read.csv( system.file("examples/df_val.csv", package = "hydrusR") ).
@@ -79,7 +81,7 @@ material, then enter 1 or leave NULL and 1 will be filled for all rows.}
 \item{rBeta}{numeric, length 1. see ?write.root.dist for examples. 0 = same root density at all rooting depths. 0.962 = former default. values
 should be either 0, or range from 0.9 to 0.99 for reasonable results. try: plot(1-rBeta^(rev(seq(0,root_depth,1)))}
 
-\item{WP}{= wilting point. in project length units. -8000 cm is Pasture default for Feddes root stress model.}
+\item{WP}{wilting point. in project length units. -8000 cm is Pasture default for Feddes root stress model.}
 
 \item{trans_pc}{numeric, length 1, value between 0 and 1. decimal percent for how much of PET should be assigned as potential transpiration. the
 remainder (1-trans_pc) is assigned as soil evaporation. Default = 1, meaning all PET is from roots.}
@@ -95,8 +97,6 @@ remainder (1-trans_pc) is assigned as soil evaporation. Default = 1, meaning all
 \item{hCritS}{numeric, length 1. maximum surface hydraulic head. if > 0, ponding can occur up to that depth in project length units. if zero, then no ponding, and runoff occurs immediately.}
 
 \item{return.df}{return dataframe loaded from Nod_Inf.OUT. if FALSE, nothing is returned to console.}
-
-\item{SpaceUnit:}{your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".}
 }
 \value{
 if return.df=TRUE then a dataframe loaded from Nod_Inf.OUT is returned if simulation is successful. If FALSE, nothing is returned to console.
@@ -136,5 +136,5 @@ df.out \%>\%
     facet_wrap(~Depth)
 }
 \author{
-Trevor Baker <tbaker@iegconsuting.com>
+Trevor Baker <tbaker@iegconsulting.com>
 }

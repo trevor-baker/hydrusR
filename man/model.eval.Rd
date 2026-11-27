@@ -6,6 +6,20 @@
 \usage{
 model.eval(data, var.name = "", print.stats = TRUE, plot = FALSE, ...)
 }
+\arguments{
+\item{data}{Data frame with columns `obs` (observed) and `pred` (predicted).}
+
+\item{var.name}{Variable name used in plot axis labels.}
+
+\item{print.stats}{Logical; if TRUE, return RMSE and CEFF.}
+
+\item{plot}{Logical; if TRUE, draw observed vs predicted plot with a 1:1 line.}
+
+\item{...}{Currently unused.}
+}
 \description{
 Calculate RMSE and Nash-Sutcliffe CEFF of the simulation
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

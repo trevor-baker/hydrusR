@@ -18,10 +18,11 @@
 #' head values ranging from near-saturation (e.g., -1e-3) to at least -1e5 cm. Cannot have h=0 (saturation) because Hydrus will not accept h >= 0.
 #' @param TimeUnit your simulation time unit (default = "hours"). permitted: "seconds", "minutes", "hours", "days", "years". \cr
 #' @param SpaceUnit your simulation spatial (length) unit (default = "cm"). permitted: "mm", "cm", "m".
-#' @return
+#' @param ... Currently unused.
+#' @return Called for its side effect of writing hydraulic parameters to SELECTOR.IN. Returns NULL invisibly.
+#' @author Subodh Acharya <https://github.com/shoebodh>
 #' @export
 #'
-#' @examples
 write.hydraulic.para<- function(project.path,
                                 model = 0,
                                 hysteresis = 0,

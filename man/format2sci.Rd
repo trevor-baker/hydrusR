@@ -12,10 +12,15 @@ format2sci(x, ndec, power.digits, ...)
 \item{ndec}{Number of decimal places to apply (e.g, .000xx)}
 
 \item{power.digits}{Number of power digits to apply (e.g., e+002)}
+
+\item{...}{Currently unused.}
 }
 \value{
 a character string of a value formatted to scientific notation
 }
 \description{
 Format number to scientific format according to HYDRUS inputs
+}
+\examples{
+format2sci(120.5, ndec = 5, power.digits = 2)
 }

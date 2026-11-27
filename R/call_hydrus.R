@@ -4,11 +4,14 @@
 #' @param hydrus.path  Path of the Hydrus 1D executable
 #' @param show.output Logical (Default = TRUE) whether the shell
 #'                    output should be visible on R console (relevant only on windows)
+#' @param timeout Maximum run time in seconds (Default = NULL, no limit). On
+#'                timeout (windows) the process is killed and a warning is issued.
 #' @export
 
 call.H1D <- function(project.path,
                      hydrus.path = NULL,
-                     show.output = TRUE, ...){
+                     show.output = TRUE,
+                     timeout = NULL, ...){
 
    os.type = .Platform$OS.type
 
@@ -45,15 +48,29 @@ call.H1D <- function(project.path,
 
 
   oldwd = getwd() #save to restore after
+  on.exit(setwd(oldwd), add = TRUE)
   setwd(hydrus.path)
 
   if(os.type == "unix") {
         system(paste0("./", hydrus.exe))
   } else {
-        system(hydrus.exe, show.output.on.console = show.output,
-               minimized = TRUE, invisible = TRUE)
-  }
+        t0 = Sys.time()
+        status = suppressWarnings(
+          system2(hydrus.exe,
+                  stdout = if(show.output) "" else FALSE,
+                  stderr = if(show.output) "" else FALSE,
+                  timeout = if(is.null(timeout)) 0 else ceiling(timeout),
+                  minimized = TRUE, invisible = TRUE)
+        )
 
-  setwd(oldwd) #restore working directory
+        # system2 returns 124 on timeout and kills its own child process
+        if(!is.null(timeout) && identical(as.integer(status), 124L)){
+          elapsed = round(as.numeric(difftime(Sys.time(), t0, units = "secs")), 1)
+          warning("H1D_CALC.EXE timed out and was killed after ", elapsed,
+                  " s (timeout = ", timeout, " s). Project path: ", project.path,
+                  call. = FALSE)
+          return(invisible(status))
+        }
+  }
 
 }#end fn

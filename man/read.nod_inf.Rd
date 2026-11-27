@@ -19,6 +19,10 @@ read.nod_inf(
 
 \item{output}{Vector of output types to be read (e.g., "Head", "Moisture", "Flux"). This is only used if drop.cols = TRUE, otherwise all columns
 will be returned.}
+
+\item{drop.cols}{Logical. If TRUE, only Time, Node, Depth and the columns named in `output` are returned.}
+
+\item{...}{Currently unused.}
 }
 \value{
 data.table of Nod_Inf.out results for all timesteps.

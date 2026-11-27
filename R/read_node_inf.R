@@ -6,7 +6,8 @@
 #' @param out.file Name of the Nod_Inf.out file, in case saved to different name
 #' @param output Vector of output types to be read (e.g., "Head", "Moisture", "Flux"). This is only used if drop.cols = TRUE, otherwise all columns
 #' will be returned.
-#' @param ...
+#' @param drop.cols Logical. If TRUE, only Time, Node, Depth and the columns named in `output` are returned.
+#' @param ... Currently unused.
 #' @author Subodh Acharya <https://github.com/shoebodh>; Trevor Baker <tbaker@iegconsulting.com>
 #' @return data.table of Nod_Inf.out results for all timesteps.
 #' @export

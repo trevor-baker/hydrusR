@@ -14,6 +14,8 @@ dir.copy(src.dir, dest.dir, overwrite = TRUE, ask = FALSE, ...)
 \item{overwrite}{Logical, if true overwrites the existing directory, default = T}
 
 \item{ask}{Logical, should ask whether to create/delete directories if required, default = FALSE}
+
+\item{...}{Currently unused.}
 }
 \description{
 Copy contents of a folder to another

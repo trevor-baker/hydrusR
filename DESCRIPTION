@@ -6,6 +6,7 @@ Date: 2020-04-11
 Author: Subodh Acharya
 Maintainer: <shoebodh@gmail.com>
 Description: Create, run and analyze HYDRUS-1D simulations, all inside R
+Encoding: UTF-8
 License: GPL 3.0
 LazyData: TRUE
 Depends: data.table (>= 1.10.0)

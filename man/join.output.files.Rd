@@ -10,7 +10,12 @@ join.output.files(project.path, out.files.path = "default", ...)
 \item{project.path}{Path of the hydrus project}
 
 \item{out.files.path}{Directory of output files. Default is 'defaults' which = project.path}
+
+\item{...}{Currently unused.}
 }
 \description{
 Join the output files from several H1D simulations (for longer simulation times than allowed by H1D (1000))
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

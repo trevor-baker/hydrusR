@@ -13,12 +13,17 @@ read.obs_node(project.path, out.file = "Obs_Node.out", obs.output = NULL, ...)
 
 \item{obs.output}{The output to be returned.Default = NULL, i.e., all the outputs are read
 Other options are "h", "theta", "Flux". example, obs.output = c("h", "theta")}
+
+\item{...}{Currently unused.}
 }
 \description{
-Read observation point outputs
+Reads observation point outputs of h, theta and flux, that is produced in the "Obs_Node.out" file
 }
 \examples{
 parent.dir <- "C:/Users/t/IEG Dropbox/Trevor Baker/Integral Ecology/calculation tools/awsc/r scripts/ieg awsc/under development/vG PTF/Hydrus/"
 project.path <- paste0(parent.dir,"plotA")
 oo <- read.obs_node(project.path)
+}
+\author{
+Subodh Acharya <https://github.com/shoebodh>
 }

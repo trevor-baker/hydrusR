@@ -6,6 +6,11 @@
 \usage{
 unit_mult(SpaceUnit = "cm", TimeUnit = "hours")
 }
+\arguments{
+\item{SpaceUnit}{Length unit of the project. One of "mm", "cm", "m". Default "cm".}
+
+\item{TimeUnit}{Time unit of the project. One of "seconds", "minutes", "hours", "days", "years". Default "hours".}
+}
 \value{
 vector, length 3. L.multiple, T.multiple, LT.multiple. Multiply cm, d, or cm/d values by these to get L, T, or L/T in your project units.
 }
